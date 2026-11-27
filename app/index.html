@@ -174,6 +174,8 @@ td.nw{white-space:nowrap}
 .cert .c2{font:400 clamp(22px,5vw,40px)/1.05 "Lilita One",sans-serif}
 .cert .c3{font:800 clamp(12px,2vw,16px) Nunito,sans-serif}
 .cert.locked{filter:grayscale(1);opacity:.6}
+#hello{position:fixed;inset:0;background:rgba(8,14,40,.88);display:none;z-index:35;overflow-y:auto;padding:16px}
+#hello.on{display:grid;place-items:center}
 #cele{position:fixed;inset:0;background:rgba(8,14,40,.85);display:none;z-index:30;overflow-y:auto;padding:16px}
 #cele.on{display:grid;place-items:center}
 .cbox{max-width:720px;width:100%;background:#fff;color:var(--ink);border-radius:24px;overflow:hidden;text-align:center}
@@ -253,6 +255,7 @@ td.nw{white-space:nowrap}
 
 <div id="panel" role="dialog" aria-modal="true" aria-labelledby="mtitle"><div class="sheet" id="sheet"></div></div>
 <div id="toast" role="status"></div>
+<div id="hello" role="dialog" aria-modal="true" aria-label="Welcome"></div>
 <div id="cele" role="dialog" aria-modal="true" aria-label="Celebration"></div>
 
 <script>
@@ -693,7 +696,7 @@ function renderM(){
  if(name==="Example")h+=`<div class="say">${ember("pointing")}<div class="bubble">Look at what this writer did!</div></div><h3>See it in action</h3><div class="ex">${cm.ex}</div><p class="tip" style="margin-top:10px">${esc(cm.exNote)}</p><p class="tip">Parent tip: read it aloud together, then ask, “What did the writer do that we could steal?”</p>`;
  if(name==="Play")h+=`<div class="say">${ember("thinking")}<div class="bubble">Quick game! Let's see if you've got it.</div></div><div class="game" id="game"></div>`;
  if(name==="Get a prompt")h+=`<div class="say">${ember("spinner")}<div class="bubble">Pick a prompt, or spin for a surprise!</div></div><h3>Choose your prompt</h3><p>Pick one of these, or use any idea you like. Tap to choose.</p>${cm.prompts.map((p,k)=>`<label class="pcard"><input type="radio" name="pp" value="${k}" ${k===0?"checked":""}> <span>${esc(p)}</span></label>`).join("")}<div class="row" style="margin-top:10px"><button class="btn ghost" id="randP">Give me a surprise prompt</button></div><div class="card" id="randOut" style="display:none"></div>`;
- if(name==="Write"){h+=`<div class="say">${ember("writing")}<div class="bubble">Your turn to write. I believe in you!</div></div><h3>Your mission</h3><div class="task">${esc(cm.task)}</div><p class="tip" style="margin-top:10px">Write on paper or in your Notes app. Writing it by hand counts!</p>
+ if(name==="Write"){h+=`<div class="say">${ember("writing")}<div class="bubble">Your turn to write. I believe in you!</div></div><img class="pcimg" src="art/write-desk.webp" alt="A cozy writing desk" style="aspect-ratio:3/1;object-fit:cover"><h3>Your mission</h3><div class="task">${esc(cm.task)}</div><p class="tip" style="margin-top:10px">Write on paper or in your Notes app. Writing it by hand counts!</p>
   <div class="timer"><img src="art/write-hourglass.webp" alt=""><span class="clock" id="clock">15:00</span><button class="btn ghost" id="tgo">Start writing sprint</button><button class="btn ghost" id="treset">Reset</button></div>
   <div class="pcrow"><img src="art/write-checklist.webp" alt="" style="width:64px;height:64px"><h3 style="margin:0">Check your work</h3></div><ul class="checks">${cm.checks.map((c,k)=>`<li><label><input type="checkbox" data-c="${k}"> <span>${esc(c)}</span></label></li>`).join("")}</ul>
   <button class="btn red" id="finish" disabled>${S.done[cm.i]?"Mission already complete ★":"Complete mission!"}</button>`}
@@ -707,7 +710,7 @@ function renderM(){
  if(name==="Get a prompt")$("#randP").onclick=()=>{const g=G[pick(Object.keys(G))];const o=$("#randOut");o.style.display="block";o.textContent=`Write about ${pick(g.who)} in ${pick(g.where)} who ${pick(g.what)}.`};
  if(name==="Write")wireWrite();
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&cm)closeM()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("#hello").classList.contains("on"))$("#hello").classList.remove("on");else if(cm)closeM()}});
 
 function wireWrite(){
  const boxes=[...document.querySelectorAll(".checks input")],fin=$("#finish");
@@ -762,9 +765,9 @@ function sentence(){if(!cur.who||!cur.where||!cur.what)return;$("#result").inner
 function favs(){$("#favs").innerHTML=S.favs.length?S.favs.map((f,j)=>`<li>${esc(f)} <button data-j="${j}" aria-label="Remove saved idea">Remove</button></li>`).join(""):`<li class="tip" style="list-style:none;margin-left:-20px">Nothing saved yet. Save your favorite ideas for later!</li>`;
  document.querySelectorAll("#favs button").forEach(b=>b.onclick=()=>{S.favs.splice(+b.dataset.j,1);save();favs()})}
 $("#spinAll").onclick=spinAll;
-$("#saveSpin").onclick=()=>{const t=$("#result").textContent.trim();if(t&&!S.favs.includes(t)){S.favs.unshift(t);save();favs();toast("Idea saved!")}};
+$("#saveSpin").onclick=()=>{const t=$("#result").textContent.trim();if(t&&!S.favs.includes(t)){S.favs.unshift(t);save();favs();toast("Idea saved!","ember-cheer")}};
 $("#draw").onclick=()=>{const c=$("#cardOut");c.classList.add("back");setTimeout(()=>{c.textContent=pick(CARDS);c.classList.remove("back")},still?0:450)};
-$("#saveCard").onclick=()=>{const t=$("#cardOut").textContent.trim();if(t&&!S.favs.includes(t)){S.favs.unshift(t);save();favs();toast("Card saved!")}};
+$("#saveCard").onclick=()=>{const t=$("#cardOut").textContent.trim();if(t&&!S.favs.includes(t)){S.favs.unshift(t);save();favs();toast("Card saved!","ember-cheer")}};
 
 /* ---------- BADGES ---------- */
 function badges(){$("#shelf").innerHTML=M.map(m=>{const on=!!S.done[m.i];const f=m.boss?`badge-${String(m.i+1).padStart(2,"0")}-boss`:`badge-${String(m.i+1).padStart(2,"0")}`;
@@ -774,6 +777,7 @@ function badges(){$("#shelf").innerHTML=M.map(m=>{const on=!!S.done[m.i];const f
 function parents(){
  $("#pc").innerHTML=`<img class="pcimg" src="art/parent-corner.webp" alt=""><h2>Parent corner</h2>
  <p>This course takes Asher through the narrative-writing skills taught in 3rd, 4th and 5th grade, in that order. Each land matches one grade's Common Core narrative standard (W.3.3, W.4.3, W.5.3). Each one builds on the last: 3rd grade sets up characters, sequence, dialogue and closure; 4th adds sensory and concrete detail, transitions and endings that follow from events; 5th adds pacing and transition clauses. Missions unlock one at a time, so skills can't be skipped.</p>
+ <h3>Meet Ember</h3><img class="pcimg" src="art/ember-character-sheet.webp" alt="Ember the dragon from the front, side, back and three-quarter view"><p>Ember is Asher's guide through the whole quest: the smallest dragon in the land, and the bravest. He teaches each lesson, cheers every win and shrugs off every miss, so mistakes feel like part of the game.</p>
  <h3>How to run a session (about 25–40 minutes)</h3>
  <ul class="lesson"><li><b>Learn + Example (5–10 min).</b> Read the lesson and example together, out loud. This copies the writer's workshop "mini-lesson + mentor text" routine used in classrooms.</li><li><b>Play (5 min).</b> He does the game on his own. It checks he understood the skill.</li><li><b>Prompt + Write (15–20 min).</b> Let him pick. The 15-minute sprint timer helps him start. Paper or the Notes app both work.</li><li><b>Share (5 min).</b> He reads it to you. This is the most important part.</li></ul>
  <p><b>Suggested pace:</b> 2–3 sessions a week. Don't rush: repeating a mission with a new prompt is great practice. Bosses can take a whole week.</p>
@@ -812,8 +816,11 @@ function celebrate(i,first){
  const draw=()=>{const c=steps[k];el.innerHTML=`<div class="cbox ${c.sq?"sqmode":""}">${c.sq?`<img class="sq" src="art/${c.img}.webp" alt="">`:`<img class="big" src="art/${c.img}.webp" alt="">`}<div class="in">${k===0?`<img class="bdg" src="art/${bf}.webp" alt="New badge">`:""}<h2>${esc(c.t)}</h2><p>${esc(c.p)}</p><button class="btn" id="cnext">${k<steps.length-1?"Next":"Back to the map"}</button></div></div>`;el.classList.add("on");$("#cnext").focus();$("#cnext").onclick=()=>{if(++k<steps.length)draw();else{el.classList.remove("on");show("map")}}};
  draw();
 }
+function welcome(){const el=$("#hello");const n=Object.keys(S.done).length;
+ el.innerHTML=`<div class="cbox"><img class="big" src="art/share-thumbnail.webp" alt="Ember waving in front of the quest map" style="aspect-ratio:1200/630"><div class="in"><h2>${n?"Welcome back, Asher!":"Welcome, Asher!"}</h2><p>${n?`You have ${n} of ${M.length} badges. Ember saved your spot on the map.`:"I'm Ember. Together we'll cross three lands, beat three bosses, and turn you into a Master Storyteller. Ready?"}</p><button class="btn red" id="hgo">${n?"Continue the quest":"Start the quest!"}</button></div></div>`;
+ el.classList.add("on");$("#hgo").focus();$("#hgo").onclick=()=>el.classList.remove("on")}
 function refresh(){stats();mapSVG();lands();badges();parents();favs()}
-genres();reels();refresh();spinAll();$("#cardOut").textContent=pick(CARDS);
+genres();reels();refresh();spinAll();welcome();$("#cardOut").textContent=pick(CARDS);
 const h=(location.hash||"").slice(1);show(["map","spin","badges","parents"].includes(h)?h:"map");
 window.addEventListener("hashchange",()=>{const v=location.hash.slice(1);if(["map","spin","badges","parents"].includes(v))show(v)});
 }
