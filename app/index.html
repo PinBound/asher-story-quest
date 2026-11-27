@@ -151,7 +151,7 @@ th{background:var(--soft)}
 td.nw{white-space:nowrap}
 @media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{border:0;padding:2px 0}.stack td::before{content:attr(data-l) ": ";font-weight:800;color:var(--muted)}}
 .hdr-ember{width:76px;height:76px;flex:none;object-fit:contain}
-.lband{display:block;width:calc(100% + 32px);margin:-16px -16px 12px;aspect-ratio:16/9;object-fit:cover;border-radius:20px 20px 0 0}
+.lband{display:block;width:calc(100% + 32px);margin:-16px -16px 12px;aspect-ratio:16/9;max-height:240px;object-fit:cover;border-radius:20px 20px 0 0}
 .mhero{display:block;width:100%;aspect-ratio:3/1;object-fit:cover}
 .say img{width:84px;height:84px;flex:none;object-fit:contain}
 .steps button{display:inline-flex;align-items:center;gap:6px}
@@ -193,6 +193,9 @@ td.nw{white-space:nowrap}
 .cbox.sqmode .bdg{margin-top:4px}
 .toastimg{width:44px;height:44px;vertical-align:middle;margin-right:8px}
 .olist{background:url(../webp/game-order-scroll.webp) center/cover;border-radius:16px;padding:14px}
+@media(min-width:1000px) and (orientation:landscape){#v-map.on{display:grid;grid-template-columns:minmax(0,min(calc(100svh - 190px),60%)) minmax(0,1fr);gap:16px;align-items:start}#v-map .mapbox{position:sticky;top:12px}#v-map .lands{grid-template-columns:minmax(0,1fr);margin-top:0}}
+@media(hover:none){.mbtn:hover:not([disabled]){border-color:var(--line)}}
+button,.stone{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--gold);color:var(--ink);font:400 22px "Lilita One",sans-serif;padding:14px 22px;border-radius:18px;box-shadow:0 6px 0 var(--gold2);display:none;z-index:40;text-align:center;max-width:90vw}
 #toast.on{display:block}
 .foot{color:#c9d4ff;font-size:14px;margin-top:22px}
