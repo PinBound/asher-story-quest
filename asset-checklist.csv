@@ -1,0 +1,111 @@
+filename,category,width,height,native_width,native_height,transparent,png_bytes,webp_bytes
+ember-character-sheet.png,Ember the dragon (mascot),1920,1080,1672,941,False,1894411,203396
+ember-wave.png,Ember the dragon (mascot),1024,1024,1254,1254,True,703899,142104
+ember-teaching.png,Ember the dragon (mascot),1024,1024,1254,1254,True,799269,162810
+ember-pointing.png,Ember the dragon (mascot),1024,1024,1254,1254,True,770652,153200
+ember-thinking.png,Ember the dragon (mascot),1024,1024,1254,1254,True,728320,146598
+ember-spinner.png,Ember the dragon (mascot),1024,1024,1254,1254,True,1118899,237866
+ember-writing.png,Ember the dragon (mascot),1024,1024,1254,1254,True,881984,159338
+ember-cheer.png,Ember the dragon (mascot),1024,1024,1254,1254,True,806060,171718
+ember-oops.png,Ember the dragon (mascot),1024,1024,1254,1254,True,647484,138408
+ember-sleeping.png,Ember the dragon (mascot),1024,1024,1254,1254,True,927808,174844
+ember-knight.png,Ember the dragon (mascot),1024,1024,1254,1254,True,886209,171738
+ember-reading.png,Ember the dragon (mascot),1024,1024,1254,1254,True,1017264,200652
+ember-crown.png,Ember the dragon (mascot),1024,1024,1254,1254,True,801734,165122
+map-full.png,The quest map,1500,1000,1536,1024,False,2036168,295928
+map-village.png,The quest map,1800,600,2172,724,False,1702204,301966
+map-mountains.png,The quest map,1800,600,2172,724,False,1613111,259396
+map-castle.png,The quest map,1800,600,2172,724,False,1658441,267262
+stone-open.png,The quest map,1024,1024,1254,1254,True,724822,71668
+stone-locked.png,The quest map,1024,1024,1254,1254,True,732554,71340
+stone-done.png,The quest map,1024,1024,1254,1254,True,634165,80374
+stone-boss.png,The quest map,1024,1024,1254,1254,True,1140282,131168
+land-apprentice.png,Land title cards (one per grade level),1920,1080,1672,941,False,2767523,381990
+land-adventurer.png,Land title cards (one per grade level),1920,1080,1672,941,False,2654873,347240
+land-master.png,Land title cards (one per grade level),1920,1080,1672,941,False,2430493,290894
+mission-01-idea-hunting.png,Mission header art (one per mission),1800,600,2172,724,False,1505407,221500
+mission-02-hero-builder.png,Mission header art (one per mission),1800,600,2172,724,False,1400926,195964
+mission-03-where-when.png,Mission header art (one per mission),1800,600,2172,724,False,1319370,191972
+mission-04-story-path.png,Mission header art (one per mission),1800,600,2172,724,False,1530347,235382
+mission-05-talking-characters.png,Mission header art (one per mission),1800,600,2172,724,False,1406910,198294
+mission-06-show-dont-tell.png,Mission header art (one per mission),1800,600,2172,724,False,1430704,176304
+mission-07-the-ending.png,Mission header art (one per mission),1800,600,2172,724,False,1502440,225534
+boss-01-dragons-egg.png,Mission header art (one per mission),1800,600,2172,724,False,1468419,211188
+mission-09-hook.png,Mission header art (one per mission),1800,600,2172,724,False,1208241,155844
+mission-10-five-senses.png,Mission header art (one per mission),1800,600,2172,724,False,1634657,255290
+mission-11-power-words.png,Mission header art (one per mission),1800,600,2172,724,False,1437990,191550
+mission-12-bridges.png,Mission header art (one per mission),1800,600,2172,724,False,1524981,243586
+mission-13-story-mountain.png,Mission header art (one per mission),1800,600,2172,724,False,1257456,163588
+mission-14-ending-that-fits.png,Mission header art (one per mission),1800,600,2172,724,False,1468307,218468
+boss-02-mountain-trial.png,Mission header art (one per mission),1800,600,2172,724,False,1519434,219752
+mission-16-speed-control.png,Mission header art (one per mission),1800,600,2172,724,False,1415706,190158
+mission-17-whos-telling.png,Mission header art (one per mission),1800,600,2172,724,False,1609233,256032
+mission-18-dialogue-purpose.png,Mission header art (one per mission),1800,600,2172,724,False,1457537,213204
+mission-19-twisty-transitions.png,Mission header art (one per mission),1800,600,2172,724,False,1619401,252344
+mission-20-revision-workshop.png,Mission header art (one per mission),1800,600,2172,724,False,1585082,255458
+mission-21-polish-publish.png,Mission header art (one per mission),1800,600,2172,724,False,1451464,215424
+boss-03-castle-gate.png,Mission header art (one per mission),1800,600,2172,724,False,1534253,228484
+badge-01.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,825581,128740
+badge-02.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,781562,121448
+badge-03.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,820858,136398
+badge-04.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,775229,126446
+badge-05.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,737320,102520
+badge-06.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,844082,136652
+badge-07.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,853367,129756
+badge-08-boss.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,1088766,190194
+badge-09.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,773248,114252
+badge-10.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,841728,139608
+badge-11.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,856087,123856
+badge-12.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,821566,128826
+badge-13.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,748158,118232
+badge-14.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,820371,119238
+badge-15-boss.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,1079834,189608
+badge-16.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,696619,115334
+badge-17.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,813058,130692
+badge-18.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,784037,116234
+badge-19.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,752100,117882
+badge-20.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,808856,133212
+badge-21.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,806688,129686
+badge-22-boss.png,"Badges (one per mission, 22 in all)",1024,1024,1254,1254,True,1097371,189934
+spinner-machine.png,Story spinner art,1024,1024,1254,1254,True,1195649,232318
+spinner-lever.png,Story spinner art,1024,1024,1254,1254,True,583020,101128
+reel-who.png,Story spinner art,1024,1024,1254,1254,True,960964,140780
+reel-where.png,Story spinner art,1024,1024,1254,1254,True,1106305,152132
+reel-what.png,Story spinner art,1024,1024,1254,1254,True,1069146,152094
+reel-twist.png,Story spinner art,1024,1024,1254,1254,True,1070325,169618
+genre-fantasy.png,Story spinner art,1024,1024,1254,1254,True,1023120,142612
+genre-adventure.png,Story spinner art,1024,1024,1254,1254,True,1136101,142874
+genre-game-worlds.png,Story spinner art,1024,1024,1254,1254,True,1205983,181790
+genre-sports.png,Story spinner art,1024,1024,1254,1254,True,987007,119408
+genre-animals.png,Story spinner art,1024,1024,1254,1254,True,1054651,131452
+genre-spooky.png,Story spinner art,1024,1024,1254,1254,True,991154,113748
+genre-scrambler.png,Story spinner art,1024,1024,1254,1254,True,1229756,184894
+card-back.png,Story spinner art,1000,1500,1024,1536,False,1719565,216600
+card-front-frame.png,Story spinner art,1000,1500,1024,1536,True,871266,204744
+step-learn.png,Mission step icons (the five tabs inside a mission),1024,1024,1254,1254,True,850755,97500
+step-example.png,Mission step icons (the five tabs inside a mission),1024,1024,1254,1254,True,949122,113392
+step-play.png,Mission step icons (the five tabs inside a mission),1024,1024,1254,1254,True,979192,122018
+step-prompt.png,Mission step icons (the five tabs inside a mission),1024,1024,1254,1254,True,921690,105808
+step-write.png,Mission step icons (the five tabs inside a mission),1024,1024,1254,1254,True,964634,115230
+game-sort-bins.png,Game screen art,1920,1080,1672,941,True,1754286,260558
+game-five-bins.png,Game screen art,1920,1080,1672,941,True,1315994,288878
+game-order-scroll.png,Game screen art,1920,1080,1672,941,False,2100668,210340
+game-correct.png,Game screen art,1024,1024,1254,1254,True,873754,222900
+game-tryagain.png,Game screen art,1024,1024,1254,1254,True,563324,92366
+game-complete.png,Game screen art,1920,1080,1672,941,False,2435965,300194
+write-desk.png,Writing step art,1920,1080,1672,941,False,2290234,277842
+write-hourglass.png,Writing step art,1024,1024,1254,1254,True,863379,163636
+write-checklist.png,Writing step art,1024,1024,1254,1254,True,979666,141428
+celebrate-mission.png,Celebrations and milestones,1024,1024,1254,1254,True,993715,245106
+celebrate-boss.png,Celebrations and milestones,1920,1080,1672,941,False,2784668,354964
+celebrate-level-up-adventurer.png,Celebrations and milestones,1920,1080,1672,941,False,2093810,219560
+celebrate-level-up-master.png,Celebrations and milestones,1920,1080,1672,941,False,2415396,305072
+celebrate-master-storyteller.png,Celebrations and milestones,1920,1080,1672,941,False,2315210,282350
+certificate-frame.png,Celebrations and milestones,3300,2550,1428,1101,False,5301228,513178
+parent-corner.png,Parent corner and extras,1800,600,2172,724,False,1413232,196090
+parent-two-stars-wish.png,Parent corner and extras,1024,1024,1254,1254,True,790889,179844
+reading-list.png,Parent corner and extras,1800,600,2172,724,False,1448038,232562
+app-icon.png,App icon and sharing image,1024,1024,1254,1254,False,1117140,140150
+share-thumbnail.png,App icon and sharing image,1200,630,1731,909,False,1124073,190048
+loading.png,App icon and sharing image,1024,1024,1254,1254,True,799815,190848
+badge-locked.png,Badges,1024,1024,1254,1254,True,645167,76396
