@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asher's Story Quest</title>
+<link rel="artifact-thumbnail" href="art/share-thumbnail.jpg">
+<link rel="icon" href="art/app-icon.webp">
+<link rel="apple-touch-icon" href="art/app-icon.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE occasion: a kid's adventure game, exuberant but readable
+   IDEA a fantasy quest map: three lands, each mission a stop on the road, bosses at the gates
+   PICTURE the illustrated map (meadow village, dragon mountains, storm castle) with tappable mission stones
+   COLOUR royal night blue ground, meadow green, mountain violet, gold for rewards, dragon red for action
+   TYPE Lilita One for titles and buttons + Nunito for reading
+   LAYOUT title bar, tabs, map full width, level list beneath; missions open as a full-screen scroll panel */
+:root{color-scheme:light;--bg:#14286b;--deep:#0d1b4d;--ink:#1b1f3a;--paper:#ffffff;--soft:#eef3ff;--gold:#ffc83d;--gold2:#e9a400;--red:#ff5a3c;--green:#2fa65a;--violet:#6c4bd8;--muted:#5a6285;--line:#d6ddf3}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:#fff;font:17px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3,.btn,.tab,.disp{font-family:"Lilita One","Arial Black",system-ui,sans-serif;font-weight:400;letter-spacing:.01em}
+h1{font-size:clamp(30px,6vw,48px);line-height:1.05;margin:0}
+h2{font-size:clamp(26px,4.5vw,36px);line-height:1.1;margin:0 0 8px}
+h3{font-size:22px;line-height:1.15;margin:0 0 6px}
+p{margin:0 0 12px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,16px)}
+header{background:var(--deep);padding:14px 0}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.top svg{width:62px;height:62px;flex:none}
+.hello{flex:1 1 240px}
+.hello small{display:block;color:#c9d4ff;font-weight:700;font-size:15px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:#22378a;border-radius:14px;padding:6px 14px;font-weight:900;white-space:nowrap}
+.stat b{color:var(--gold);font-family:"Lilita One";font-weight:400;font-size:22px;margin-right:4px}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0}
+.tab{border:0;background:#22378a;color:#fff;font-size:19px;padding:10px 18px;border-radius:14px;min-height:48px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--gold);color:var(--ink);box-shadow:0 4px 0 var(--gold2)}
+.tab:focus-visible,.btn:focus-visible,.chip:focus-visible,.stone:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.view{display:none;padding-bottom:48px}
+.view.on{display:block}
+.mapbox{border-radius:22px;overflow:hidden;background:#1d3a8f;border:4px solid #0a1640}
+.mapbox svg{display:block;width:100%;height:auto}
+.stone{cursor:pointer}
+.stone text{font-family:"Lilita One";pointer-events:none}
+.pulse{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{50%{transform:scale(1.12)}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+.lands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+@media(max-width:860px){.lands{grid-template-columns:minmax(0,1fr)}}
+.land{background:var(--paper);color:var(--ink);border-radius:20px;padding:16px}
+.land h3{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.land h3 small{font-family:Nunito;font-weight:800;font-size:14px;color:var(--muted)}
+.land .bar{height:12px;background:var(--soft);border-radius:8px;overflow:hidden;margin:4px 0 10px}
+.land .bar i{display:block;height:100%;background:var(--green)}
+.mlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.mbtn{width:100%;display:flex;gap:10px;align-items:center;text-align:left;border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px 10px;font:inherit;color:var(--ink);cursor:pointer;min-height:48px}
+.mbtn:hover:not([disabled]){border-color:var(--violet)}
+.mbtn[disabled]{opacity:.5;cursor:not-allowed}
+.mbtn .n{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:"Lilita One";background:var(--soft);color:var(--ink)}
+.mbtn.done .n{background:var(--gold)}
+.mbtn.boss .n{background:var(--red);color:#fff}
+.mbtn span.t{font-weight:800;line-height:1.2}
+.mbtn span.t small{display:block;font-weight:600;color:var(--muted);font-size:14px}
+.btn{border:0;border-radius:14px;padding:10px 20px;font-size:19px;min-height:48px;cursor:pointer;background:var(--gold);color:var(--ink);box-shadow:0 4px 0 var(--gold2)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--gold2)}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 4px 0 #c43a20}
+.btn.ghost{background:var(--soft);color:var(--ink);box-shadow:0 4px 0 var(--line)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* spinner */
+.spin{background:var(--paper);color:var(--ink);border-radius:22px;padding:clamp(16px,3vw,28px)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font:800 16px Nunito;color:var(--ink);cursor:pointer;min-height:44px}
+.chip[aria-pressed=true]{background:var(--violet);border-color:var(--violet);color:#fff}
+.reels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:820px){.reels{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){.reels{grid-template-columns:minmax(0,1fr)}}
+.reel{background:var(--deep);color:#fff;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:170px}
+.reel .lab{font-family:"Lilita One";color:var(--gold);font-size:18px}
+.reel .val{flex:1;font-weight:800;font-size:18px;line-height:1.3;display:flex;align-items:center}
+.reel button{align-self:flex-start;font-size:16px;padding:6px 14px;min-height:44px}
+.result{margin-top:16px;background:var(--soft);border-radius:18px;padding:16px;font-size:19px;font-weight:700}
+.result b{color:var(--violet)}
+.deck{margin-top:22px}
+.card{background:#fff8e1;border:3px dashed var(--gold2);border-radius:18px;padding:16px;font-size:19px;font-weight:700;margin:10px 0}
+.favs{margin:8px 0 0;padding-left:20px}
+.favs li{margin:6px 0}
+.favs button{border:0;background:none;color:var(--red);font:800 14px Nunito;cursor:pointer;min-height:32px}
+/* mission panel */
+#panel{position:fixed;inset:0;background:rgba(8,14,40,.75);display:none;z-index:20;overflow-y:auto;padding:max(12px,2vw)}
+#panel.on{display:block}
+.sheet{max-width:860px;margin:0 auto;background:var(--paper);color:var(--ink);border-radius:24px;overflow:hidden}
+.sheet .hd{background:var(--violet);color:#fff;padding:18px 20px;display:flex;gap:12px;align-items:flex-start}
+.sheet .hd.boss{background:var(--red)}
+.sheet .hd .x{margin-left:auto;flex:none;border:0;background:rgba(255,255,255,.2);color:#fff;font:900 22px Nunito;width:48px;height:48px;border-radius:14px;cursor:pointer}
+.sheet .hd small{display:block;font-weight:800;opacity:.9;font-size:15px}
+.steps{display:flex;gap:6px;padding:12px 16px;background:var(--soft);flex-wrap:wrap}
+.steps button{border:0;background:#fff;border-radius:12px;padding:8px 12px;font:800 15px Nunito;color:var(--muted);cursor:pointer;min-height:44px}
+.steps button[aria-current=true]{background:var(--ink);color:#fff}
+.steps button.ok::after{content:" ✓";color:var(--green)}
+.body{padding:20px clamp(16px,3vw,28px) 24px}
+.say{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.say svg{width:64px;height:64px;flex:none}
+.bubble{background:var(--soft);border-radius:18px;padding:12px 16px;font-weight:700}
+.lesson li{margin:6px 0}
+.ex{background:#fffdf5;border-left:6px solid var(--gold);border-radius:12px;padding:14px 16px;font-size:18px;line-height:1.7}
+mark{background:#ffe48a;padding:0 3px;border-radius:4px;color:inherit}
+.tip{font-size:15px;color:var(--muted);font-weight:700}
+.game .item{background:var(--deep);color:#fff;border-radius:16px;padding:16px;font-size:19px;font-weight:800;margin:10px 0;min-height:70px}
+.bins{display:flex;gap:10px;flex-wrap:wrap}
+.bins .btn{flex:1 1 140px}
+.fb{min-height:28px;font-weight:800;margin:8px 0}
+.fb.good{color:var(--green)}.fb.bad{color:#c43a20}
+.olist{list-style:none;padding:0;margin:10px 0;display:grid;gap:8px}
+.olist li{display:flex;gap:8px;align-items:center;background:var(--soft);border-radius:14px;padding:8px 10px;font-weight:700}
+.olist li span{flex:1}
+.olist li.right{background:#d9f5e3}.olist li.wrong{background:#ffe0d9}
+.olist button{border:0;background:#fff;border-radius:10px;width:44px;height:44px;font:900 18px Nunito;cursor:pointer;flex:none}
+.opts{display:grid;gap:8px;margin:10px 0}
+.opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;font:700 17px/1.45 Nunito;color:var(--ink);cursor:pointer;min-height:48px}
+.opt.right{border-color:var(--green);background:#d9f5e3}.opt.wrong{border-color:var(--red);background:#ffe0d9}
+.pcard{background:#fff8e1;border-radius:16px;padding:14px 16px;margin:8px 0;font-weight:700;display:flex;gap:10px;align-items:flex-start}
+.pcard input{width:24px;height:24px;flex:none;margin-top:3px;accent-color:var(--violet)}
+.task{background:var(--deep);color:#fff;border-radius:18px;padding:16px 18px;font-size:18px;font-weight:700}
+.checks{list-style:none;padding:0;margin:12px 0}
+.checks label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-weight:700;cursor:pointer}
+.checks input{width:26px;height:26px;flex:none;accent-color:var(--green)}
+.timer{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.timer .clock{font-family:"Lilita One";font-size:34px;min-width:3.2em;font-variant-numeric:tabular-nums}
+.nav2{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:0 clamp(16px,3vw,28px) 22px}
+/* badges + parents */
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.badge{background:#fff;color:var(--ink);border-radius:18px;padding:12px;text-align:center;font-weight:800;font-size:15px;line-height:1.25}
+.badge svg{width:78px;height:78px;display:block;margin:0 auto 6px}
+.badge.off{opacity:.35}
+.pc{background:var(--paper);color:var(--ink);border-radius:22px;padding:clamp(16px,3vw,28px)}
+.pc h3{margin-top:18px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft)}
+td.nw{white-space:nowrap}
+@media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{border:0;padding:2px 0}.stack td::before{content:attr(data-l) ": ";font-weight:800;color:var(--muted)}}
+.hdr-ember{width:76px;height:76px;flex:none;object-fit:contain}
+.lband{display:block;width:calc(100% + 32px);margin:-16px -16px 12px;aspect-ratio:16/9;object-fit:cover;border-radius:20px 20px 0 0}
+.mhero{display:block;width:100%;aspect-ratio:3/1;object-fit:cover}
+.say img{width:84px;height:84px;flex:none;object-fit:contain}
+.steps button{display:inline-flex;align-items:center;gap:6px}
+.steps img{width:26px;height:26px}
+.gimg{display:block;max-width:100%;height:auto;margin:6px auto}
+.fbimg{width:64px;height:64px;vertical-align:middle;margin-right:8px}
+.timer img{width:52px;height:52px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding-left:8px}
+.chip img{width:30px;height:30px}
+.reel .lab{display:flex;align-items:center;gap:8px}
+.reel .lab img{width:40px;height:40px}
+.spinhd{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.spinhd img{width:140px;height:140px;object-fit:contain;flex:none}
+.spinhd div{flex:1 1 260px}
+.btn.lever{display:inline-flex;align-items:center;gap:8px}
+.btn.lever img{width:34px;height:34px}
+.tcard{position:relative;max-width:340px;aspect-ratio:2/3;margin:12px 0;background:#fffaf0 url(art/card-front-frame.webp) center/100% 100% no-repeat;border-radius:18px;display:grid;place-items:center;padding:18% 16%;text-align:center;font-weight:800;font-size:19px;line-height:1.35;color:var(--ink)}
+.tcard.back{background:url(art/card-back.webp) center/cover no-repeat;color:transparent}
+.badge img{width:100px;height:100px;display:block;margin:0 auto 6px;object-fit:contain}
+.badge.off img{opacity:.55}
+.pcimg{display:block;width:100%;border-radius:16px;margin:6px 0 12px}
+.pcrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.pcrow img{width:110px;height:110px;object-fit:contain;flex:none}
+.pcrow>div{flex:1 1 260px}
+.cert{position:relative;max-width:640px;aspect-ratio:3300/2550;background:url(art/certificate-frame.webp) center/100% 100% no-repeat;display:grid;place-items:center;text-align:center;color:var(--ink);padding:14% 18%;margin:10px 0}
+.cert .c1{font:400 clamp(14px,2.6vw,20px) "Lilita One",sans-serif;color:#9a2a14}
+.cert .c2{font:400 clamp(22px,5vw,40px)/1.05 "Lilita One",sans-serif}
+.cert .c3{font:800 clamp(12px,2vw,16px) Nunito,sans-serif}
+.cert.locked{filter:grayscale(1);opacity:.6}
+#cele{position:fixed;inset:0;background:rgba(8,14,40,.85);display:none;z-index:30;overflow-y:auto;padding:16px}
+#cele.on{display:grid;place-items:center}
+.cbox{max-width:720px;width:100%;background:#fff;color:var(--ink);border-radius:24px;overflow:hidden;text-align:center}
+.cbox img.big{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.cbox img.sq{display:block;width:min(60%,280px);margin:16px auto 0}
+.cbox .in{padding:16px 20px 22px}
+.cbox .bdg{width:110px;height:110px;object-fit:contain;margin:-60px auto 4px;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))}
+.cbox.sqmode .bdg{margin-top:4px}
+.toastimg{width:44px;height:44px;vertical-align:middle;margin-right:8px}
+.olist{background:url(art/game-order-scroll.webp) center/cover;border-radius:16px;padding:14px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--gold);color:var(--ink);font:400 22px "Lilita One",sans-serif;padding:14px 22px;border-radius:18px;box-shadow:0 6px 0 var(--gold2);display:none;z-index:40;text-align:center;max-width:90vw}
+#toast.on{display:block}
+.foot{color:#c9d4ff;font-size:14px;margin-top:22px}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap top">
+    <img class="hdr-ember" id="hdrEmber" src="art/ember-wave.webp" alt="Ember the dragon waving">
+    <div class="hello">
+      <h1>Asher's Story Quest</h1>
+      <small>Train with Ember the dragon. Finish missions, earn badges, become a Master Storyteller.</small>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="t-map" data-v="map">Quest map</button>
+    <button class="tab" role="tab" id="t-spin" data-v="spin">Story spinner</button>
+    <button class="tab" role="tab" id="t-badges" data-v="badges">Badges</button>
+    <button class="tab" role="tab" id="t-parents" data-v="parents">Parent corner</button>
+  </nav>
+
+  <section class="view" id="v-map">
+    <div class="mapbox"><svg id="map" viewBox="0 0 1000 1000" role="img" aria-label="Quest map with three lands"></svg></div>
+    <div class="lands" id="lands"></div>
+  </section>
+
+  <section class="view" id="v-spin">
+    <div class="spin">
+      <div class="spinhd"><img src="art/spinner-machine.webp" alt="The story spinner machine"><div><h2>Story spinner</h2>
+      <p>Pick a world, then spin. Tap a single wheel to re-spin just that part. Keep spinning until you get a story you can't wait to write.</p></div></div>
+      <div class="chips" id="genres" role="group" aria-label="Story world"></div>
+      <div class="reels" id="reels"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn red lever" id="spinAll"><img src="art/spinner-lever.webp" alt="">Spin all wheels</button>
+        <button class="btn ghost" id="saveSpin">Save this idea</button>
+      </div>
+      <div class="result" id="result" aria-live="polite"></div>
+
+      <div class="deck">
+        <h3>Story starter cards</h3>
+        <p class="tip">Want a whole idea at once? Draw a card. Every card is a full prompt, and many come from popular kid writing lists, retold for Asher's worlds.</p>
+        <div class="row"><button class="btn" id="draw">Draw a card</button><button class="btn ghost" id="saveCard">Save this card</button></div>
+        <div class="tcard" id="cardOut" aria-live="polite"></div>
+        <h3 style="margin-top:18px">Saved ideas</h3>
+        <ol class="favs" id="favs"></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-badges">
+    <div class="spinhd"><img src="art/celebrate-mission.webp" alt=""><div><h2>Badge shelf</h2>
+    <p>Every finished mission adds a badge. Bosses give the big shiny ones.</p></div></div>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <section class="view" id="v-parents">
+    <div class="pc" id="pc"></div>
+  </section>
+  <p class="foot">Progress saves on this device and browser only.</p>
+</div>
+
+<div id="panel" role="dialog" aria-modal="true" aria-labelledby="mtitle"><div class="sheet" id="sheet"></div></div>
+<div id="toast" role="status"></div>
+<div id="cele" role="dialog" aria-modal="true" aria-label="Celebration"></div>
+
+<script>
+{
+/* ---------- CURRICULUM ---------- */
+const LANDS=[
+ {id:0,name:"Apprentice Village",grade:"3rd grade skills",std:"W.3.3",color:"#2fa65a"},
+ {id:1,name:"Dragon Mountains",grade:"4th grade skills",std:"W.4.3",color:"#6c4bd8"},
+ {id:2,name:"Storm Castle",grade:"5th grade skills",std:"W.5.3",color:"#ff5a3c"}];
+
+const M=[
+/* ===== LAND 1: 3rd grade ===== */
+{land:0,title:"Idea Hunting",skill:"Where stories come from",std:"Getting started",
+ say:"Every story starts as a tiny seed. Let's go seed hunting!",
+ lesson:["Writers don't wait for ideas. They <b>hunt</b> for them. Three great hunting tricks:",
+  "<b>Ask “What if…?”</b> What if my dog could talk, but only told jokes?",
+  "<b>Smash two things together.</b> Dragons + soccer. A knight + a skateboard.",
+  "<b>Grow a small real moment.</b> The time you got lost at the store could become a quest through a giant maze.",
+  "A seed is ready when it has <b>someone who wants something</b> and <b>something in the way</b>."],
+ ex:"Seed: <mark>A baby dragon</mark> <mark>wants to join the castle soccer team</mark>, but <mark>every time she gets excited she sets the ball on fire</mark>.",
+ exNote:"Yellow parts: who, what they want, what's in the way.",
+ game:{type:"sort",q:"Is this a ready story seed, or does it need more?",bins:["Ready seed","Needs more"],items:[
+  ["A knight who is scared of horses has to ride in the king's big race.",0],["Dragons.",1],
+  ["A wolf pup wants to play on the soccer team, but nobody passes to her.",0],["A castle.",1],
+  ["The best day ever.",1],["A boy finds a door in his block-built world that wasn't there yesterday, and it's locked from the other side.",0],
+  ["Football.",1],["A ghost wants to scare people, but everyone thinks he's adorable.",0]]},
+ prompts:["What if your pet could talk for one day? What would it want?","Smash together: a dragon + a birthday party. What goes wrong?","Think of a time you were nervous. Turn it into a quest."],
+ task:"Fill your Idea Treasure Chest: write 5 “What if…?” ideas. Circle your favorite, then write 2–3 sentences: Who is it about? What do they want? What's in the way?",
+ checks:["I wrote 5 “What if…?” ideas","I picked my favorite","I wrote who, what they want, and what's in the way"]},
+
+{land:0,title:"Hero Builder",skill:"Creating characters",std:"W.3.3a",
+ say:"Readers follow a story because they care about the hero. Let's build one!",
+ lesson:["A great character has more than a name. Give your hero:",
+  "<b>A want:</b> something they really, really want.",
+  "<b>Outside traits:</b> what they look like (a dented helmet, a tail with a stripe).",
+  "<b>Inside traits:</b> who they are (brave, sneaky, kind, grumpy).",
+  "<b>A weakness:</b> heroes with a problem are more fun. A knight scared of the dark? Now that's interesting!"],
+ ex:"<mark>Sir Pip</mark> was the smallest knight in the kingdom, with armor two sizes too big that clanked when he walked. <mark>He wanted to be the one to tame the castle's grumpy dragon.</mark> He was <mark>brave about everything</mark>, except <mark>thunderstorms</mark>.",
+ exNote:"Name, outside look, want, inside trait, weakness. All in three sentences!",
+ game:{type:"sort",q:"Is this an outside trait (looks) or an inside trait (personality)?",bins:["Outside","Inside"],items:[
+  ["Has a scar shaped like a lightning cloud",0],["Never gives up",1],["Wears a cape made of dragon scales",0],
+  ["Gets jealous easily",1],["Tells the truth even when it's hard",1],["Is taller than the castle door",0],["Is secretly afraid of chickens",1],["Has one blue eye and one green eye",0]]},
+ prompts:["Build a hero who is great at sports but terrible at something surprising.","Build a villain who thinks they're the good guy.","Build an animal hero with a secret skill."],
+ task:"Make two character cards: one hero, one villain (or rival). For each: name, 2 outside traits, 2 inside traits, a want, a weakness. Then write one paragraph showing your hero DOING something that proves who they are.",
+ checks:["Hero card is done","Villain or rival card is done","My paragraph shows the hero in action"]},
+
+{land:0,title:"Where & When",skill:"Setting the scene",std:"W.3.3a",
+ say:"Before the adventure starts, readers need to know where they are!",
+ lesson:["The <b>setting</b> is <b>where</b> and <b>when</b> your story happens.",
+  "Your first few sentences should tell the reader: <b>who</b> is there, <b>where</b> they are, <b>when</b> it is, and a hint of <b>trouble</b>.",
+  "Use details: not just “a forest,” but “a forest so dark the owls carried lanterns.”"],
+ ex:"<mark>The night before the Great Dragon Race</mark>, <mark>Mira</mark> crouched in the hay of <mark>the royal dragon stable</mark>. Her dragon, Pepper, was supposed to be asleep. <mark>So why was his stall empty?</mark>",
+ exNote:"When, who, where, and trouble, all in the first three sentences.",
+ game:{type:"pick",rounds:[
+  {q:"Which opening tells you WHO, WHERE, and WHEN?",opts:["Once there was a thing that happened.","On the first snowy morning of winter, Leo and his husky raced down the mountain trail toward the frozen lake.","It was really fun and cool."],a:1,why:"It has who (Leo and his husky), where (mountain trail), and when (first snowy morning)."},
+  {q:"Which setting has the best details?",opts:["They were in a cave.","They were in a big cave.","The cave dripped and echoed, and green crystals glowed on the walls like sleepy eyes."],a:2,why:"Sounds, colors and a comparison make you feel like you're there."},
+  {q:"Which opening hints at trouble?",opts:["The stadium lights flickered on, and the crowd roared, but the star player's locker was empty.","The stadium was big and had lights.","There was a game today at the stadium."],a:0,why:"An empty locker on game day? Uh oh. The reader wants to know why."}]},
+ prompts:["Start a story in a castle kitchen at midnight.","Start a story in a block-built world at sunrise on day one.","Start a story at the last minute of a championship game."],
+ task:"Write ONLY the first paragraph of a new story (4–6 sentences). Include who, where, when, and a hint of trouble. Use at least 2 setting details that use your senses.",
+ checks:["My paragraph tells who","It tells where and when","It has a hint of trouble","I used 2 setting details"]},
+
+{land:0,title:"The Story Path",skill:"Order of events + time words",std:"W.3.3a, W.3.3c",
+ say:"A story is a path. Each step leads to the next!",
+ lesson:["Stories have a <b>beginning</b> (meet the hero and the problem), a <b>middle</b> (the hero tries things), and an <b>end</b> (the problem gets solved).",
+  "Events should happen <b>because</b> of each other: the dragon sneezed, <i>so</i> the bridge caught fire, <i>so</i> the knight had to swim.",
+  "<b>Time words</b> help readers follow the path: <i>first, after that, before, during, suddenly, all of a sudden, later, finally</i>."],
+ ex:"<mark>First</mark>, Tobi packed his slingshot and three apples. <mark>After that</mark>, he climbed the hill where the griffin lived. <mark>All of a sudden</mark>, the ground shook. <mark>During</mark> the storm of feathers that followed, he hid behind a rock. <mark>Finally</mark>, he rolled an apple toward the griffin, and the giant bird purred like a kitten.",
+ exNote:"The yellow time words show the order.",
+ game:{type:"order",q:"Put this story path in order. Use the arrows to move the steps.",items:[
+  "A fox wants to win the Forest Cup race.","The night before, she practices until her paws ache.",
+  "During the race, a badger trips her on purpose.","She gets back up and finds a secret shortcut through the creek.",
+  "Finally, she crosses the finish line first, muddy but proud."]},
+ prompts:["Write the path of a quest to find a lost dragon egg.","Write the path of a soccer game that's going badly, then turns around.","Write the path of a day when everything goes wrong at the castle."],
+ task:"Plan a story with 5 boxes (draw them!): 1 start, 2 problem, 3 try, 4 big moment, 5 end. Then write the story, using at least 4 different time words.",
+ checks:["I drew and filled 5 boxes","My events happen because of each other","I used 4 or more time words"]},
+
+{land:0,title:"Talking Characters",skill:"Writing dialogue",std:"W.3.3b",
+ say:"Characters come alive when they talk. Let's give them voices!",
+ lesson:["<b>Dialogue</b> is what characters say out loud.",
+  "Put <b>quotation marks</b> around the spoken words: “Run!” yelled Mia.",
+  "The comma, period, question mark or exclamation point goes <b>inside</b> the quotation marks.",
+  "Start a <b>new line</b> every time a new character speaks.",
+  "Add what the character <b>does</b> while talking: “Mine,” growled the dragon, wrapping his tail around the gold."],
+ ex:"<mark>“That's my sword,”</mark> said Arlo, crossing his arms.<br><mark>“Finders keepers,”</mark> the goblin giggled, hugging it.<br><mark>“Give it back, or I'm telling the queen!”</mark><br>The goblin's ears drooped. <mark>“Fine. But can I at least hold it on Tuesdays?”</mark>",
+ exNote:"New speaker, new line. Punctuation inside the quotation marks.",
+ game:{type:"pick",rounds:[
+  {q:"Which one is written correctly?",opts:["“Watch out” shouted Sam!","“Watch out!” shouted Sam.","Watch out! “shouted Sam.”"],a:1,why:"The ! goes inside the quotation marks, and only the spoken words are inside."},
+  {q:"Which one is written correctly?",opts:["“Can dragons swim?” asked Lily.","“Can dragons swim” asked Lily?","Can dragons swim? asked Lily."],a:0,why:"The question mark belongs to the spoken question, so it goes inside."},
+  {q:"Which line also shows an ACTION?",opts:["“I'm ready,” said Max.","“I'm ready,” Max said, tightening his helmet strap.","Max said he was ready."],a:1,why:"Tightening the helmet strap shows us Max getting ready."}]},
+ prompts:["Two knights argue over who gets to ride the dragon.","A coach and a player who wants to quit talk before the big game.","Your pet finally talks to you. What's the first thing it complains about?"],
+ task:"Write a scene where two characters argue or make a deal. Use at least 6 lines of dialogue. Start a new line for each speaker, and add an action to at least 2 lines.",
+ checks:["6 or more lines of dialogue","Quotation marks around spoken words","New line for each new speaker","2 lines have actions"]},
+
+{land:0,title:"Show, Don't Tell",skill:"Showing feelings with actions",std:"W.3.3b",
+ say:"Don't just TELL me your hero is scared. SHOW me, so I feel it too!",
+ lesson:["<b>Telling:</b> Max was scared.",
+  "<b>Showing:</b> Max's knees wobbled. He gripped his shield so hard his knuckles turned white.",
+  "Show feelings with: what the body does, what the character says, and what they think.",
+  "Readers love figuring out feelings like detectives!"],
+ ex:"Telling: <i>Ava was excited.</i><br>Showing: <mark>Ava bounced on her toes</mark> and <mark>checked the clock for the ninth time</mark>. <mark>“Is it time yet? Is it time NOW?”</mark>",
+ exNote:"We never said “excited,” but you knew!",
+ game:{type:"sort",q:"Is this sentence TELLING or SHOWING?",bins:["Telling","Showing"],items:[
+  ["The dragon was angry.",0],["Smoke curled out of the dragon's nose, and his claws dug into the rock.",1],
+  ["Jake was nervous before the game.",0],["Jake retied his cleats three times and couldn't stop his leg from bouncing.",1],
+  ["The puppy was happy.",0],["The puppy's whole back end wiggled, and she spun in two circles.",1],
+  ["The knight was tired.",0],["The knight's eyelids drooped, and his sword scraped along the ground behind him.",1]]},
+ prompts:["Show a character who just won something huge, without using the word “happy.”","Show a hero walking into a haunted (but friendly) castle, without saying “scared.”","Show a dragon who is jealous of another dragon."],
+ task:"Rewrite these as showing: “Sam was sad.” “The wolf was hungry.” “Ella was surprised.” Then write a short scene where your hero feels nervous, but never use the word nervous.",
+ checks:["I rewrote all 3 telling sentences","My scene shows nervous without saying it","I used body actions AND words or thoughts"]},
+
+{land:0,title:"The Ending",skill:"Closing the story",std:"W.3.3d",
+ say:"A great ending is like landing a dragon: smooth, and in the right spot!",
+ lesson:["An ending should <b>solve the problem</b> from the beginning.",
+  "It shows how the character <b>feels</b> now, or what they <b>learned</b> or how they <b>changed</b>.",
+  "Watch out for these ending traps: “And then I woke up. It was all a dream.” or “The End” with nothing solved."],
+ ex:"Pepper landed in the stable just as the sun came up, a little singed and very proud. Mira hugged his scaly neck. <mark>They hadn't won the race, but they'd saved the king's lost crown, and that was better than any trophy.</mark>",
+ exNote:"The problem is solved, and we know how Mira feels about it.",
+ game:{type:"pick",rounds:[
+  {q:"A knight has been searching for a lost dragon egg. Which ending is best?",opts:["Then he woke up and it was all a dream.","The End.","The egg cracked open in his hands, and a tiny dragon sneezed a spark onto his nose. He laughed. He'd finally found her, and now he'd never be lonely again."],a:2,why:"It solves the problem (he found the egg) and shows how he feels."},
+  {q:"A shy goalie was scared to play in the final. Which ending shows she changed?",opts:["The game ended.","As the crowd cheered her name, Priya realized her hands weren't shaking anymore. Maybe she wasn't so shy after all.","Then everyone went home and had pizza."],a:1,why:"It shows how Priya changed from shy and scared to confident."}]},
+ prompts:["Write an ending where the villain becomes a friend.","Write an ending where the hero loses the game but wins something better.","Write an ending with a surprise that still makes sense."],
+ task:"Pick a story you already wrote (even your Mac Beth story!). Write TWO different endings for it. Read both out loud and pick your favorite. Why is it better?",
+ checks:["I wrote ending #1","I wrote ending #2","Both endings solve the problem","I picked a favorite and said why"]},
+
+{land:0,boss:true,title:"Boss: The Dragon's Egg",skill:"Your first full quest story",std:"W.3.3 (all)",
+ say:"You've learned every Apprentice skill. Now prove it! Time for a full story.",
+ lesson:["Write a complete story (about 1–2 pages) using everything from Apprentice Village.","Plan first with your 5-box story path. Then write. Then check the list below."],
+ ex:"Boss prompt: <mark>A dragon egg appears on your doorstep with a note that says “PLEASE HELP.”</mark> Or spin the Story Spinner and use whatever you get!",
+ exNote:"You can pick either one.",
+ game:null,
+ prompts:["A dragon egg appears on your doorstep with a note that says “PLEASE HELP.”","Spin the Story Spinner and write about whatever comes up.","Write the next adventure for William from your Mac Beth story."],
+ task:"Write your Boss Story! Plan → write → check. Then read it out loud to someone in your family.",
+ checks:["A hero with a want and a problem","A setting that tells where and when","Events in order with time words","At least 3 lines of dialogue","At least 1 moment that SHOWS a feeling","An ending that solves the problem","I read it out loud to someone"]},
+
+/* ===== LAND 2: 4th grade ===== */
+{land:1,title:"Hook the Reader",skill:"Openings that grab",std:"W.4.3a",
+ say:"Welcome to Dragon Mountains! Up here, the first sentence has to GRAB the reader.",
+ lesson:["A <b>hook</b> is a first sentence so interesting the reader HAS to keep going.",
+  "Hook types: <b>action</b> (The arrow missed my ear by an inch.), <b>dialogue</b> (“Don't open the box.”), <b>a mystery</b> (Nobody had seen the dragon in a hundred years, until Tuesday.), <b>a sound</b> (CRACK!).",
+  "“Once upon a time” is perfect for fairy tales, but try something bolder too.",
+  "Your Mac Beth story began “Once upon a time there was an adventure in London.” A hook could be: <i>Nobody in London expected a wedding to end with a ghost.</i>"],
+ ex:"<mark>The day the soccer ball started talking was the day I lost the championship.</mark> Or maybe it was the day I won it. It's complicated.",
+ exNote:"Mystery hook: now you want to know how both can be true!",
+ game:{type:"pick",rounds:[
+  {q:"Which hook grabs you most?",opts:["This is a story about a wolf.","I am going to tell you about a wolf named Gray.","The wolf had exactly one hour to get the stolen moon back before the whole forest went dark forever."],a:2,why:"A ticking clock and a stolen moon. That's a lot of questions to answer!"},
+  {q:"Which is a DIALOGUE hook?",opts:["“Whatever you do, don't look under the bridge.”","The bridge was old.","Sam walked to the bridge."],a:0,why:"It starts with someone talking, and makes us wonder what's under there."},
+  {q:"Which is an ACTION hook?",opts:["It was a nice day for a game.","I slid across the ice, stick outstretched, as the puck rocketed toward the open net.","Hockey is a sport played on ice."],a:1,why:"We start right in the middle of the action."}]},
+ prompts:["Write 3 different hooks for a story about a knight who loses his sword.","Write a mystery hook for a story set in a block-built world.","Write a sound hook for a story about a monster under the bleachers."],
+ task:"Hook Lab: For ONE story idea, write 4 hooks (action, dialogue, mystery, sound). Star the best one, then write the first page of that story.",
+ checks:["I wrote all 4 hook types","I starred my best","I wrote the first page"]},
+
+{land:1,title:"Five Senses",skill:"Sensory details",std:"W.4.3d",
+ say:"Writers use all five senses so readers feel like they're INSIDE the story.",
+ lesson:["Most writers only use <b>sight</b>. Pros use all five: <b>see, hear, smell, taste, touch</b>.",
+  "Instead of “The cave was creepy,” try: water <i>plinked</i> somewhere in the dark, and the air <i>tasted</i> like old pennies.",
+  "Don't stuff every sense into every sentence. Pick the ones that matter most."],
+ ex:"The dragon's lair <mark>smelled like burnt toast and old campfires</mark>. Gold coins <mark>clinked under my boots</mark>, and the <mark>air was so hot my eyebrows felt crispy</mark>. Somewhere in the dark, something huge <mark>let out a long, rumbling snore</mark>.",
+ exNote:"Smell, hearing, touch, hearing again. Can you feel the lair?",
+ game:{type:"sort",q:"Which sense is this detail using?",bins:["See","Hear","Smell","Taste","Touch"],items:[
+  ["The crowd's roar shook the bleachers.",1],["Salty sea spray stung my lips.",3],["The castle flag was ripped and faded.",0],
+  ["The bakery smelled like warm cinnamon.",2],["The dragon's scales were cool and smooth, like river stones.",4],
+  ["Thunder boomed over the mountain.",1],["Fresh-cut grass filled the stadium air.",2],["The ice-cold lemonade made my teeth ache.",3]]},
+ prompts:["Describe a dragon's lair using 4 senses.","Describe the stadium on championship night using 4 senses.","Describe a forest at night from an owl's point of view."],
+ task:"Senses Scavenger Hunt: Go to one real place (the kitchen, the backyard, a car ride). Write 2 details for EACH sense. Then turn it into a fantasy setting: what if that place were in a dragon kingdom?",
+ checks:["2 details for each of the 5 senses","I turned it into a fantasy setting","I used at least 3 senses in my setting"]},
+
+{land:1,title:"Power Words",skill:"Strong verbs and exact nouns",std:"W.4.3d",
+ say:"Some words are weak, like a wet noodle. Others are POWER words. Let's find them!",
+ lesson:["<b>Weak verb:</b> The dog went across the field. <b>Power verb:</b> The dog <i>bolted</i> across the field.",
+  "<b>Weak noun:</b> a bird. <b>Exact noun:</b> a hawk.",
+  "Watch for lazy words: <i>went, got, said, nice, good, bad, very, thing, stuff</i>. Swap them for something sharper.",
+  "One perfect word beats three okay ones. “Very big” → “enormous.”"],
+ ex:"Weak: The knight went into the room and got the thing.<br>Power: The knight <mark>crept</mark> into the <mark>throne room</mark> and <mark>snatched</mark> the <mark>ruby crown</mark>.",
+ exNote:"Same event, way more exciting.",
+ game:{type:"pick",rounds:[
+  {q:"Which sentence uses power words?",opts:["The player went down the field and got a goal.","The striker sprinted down the sideline and blasted the ball into the net.","The player did a good job and scored."],a:1,why:"Sprinted, sideline, blasted: you can see it happening!"},
+  {q:"Pick the best power verb: The wolf ___ at the moon.",opts:["made a noise","howled","did something"],a:1,why:"Howled is exact. You can hear it."},
+  {q:"Pick the best replacement for “very scared.”",opts:["terrified","really scared","super very scared"],a:0,why:"One strong word does the work of two weak ones."}]},
+ prompts:["Write a battle scene using NO forms of “went” or “got.”","Describe a race using 5 different power verbs for moving fast.","Write about a dragon eating breakfast with exact nouns for every food."],
+ task:"Word Swap: Take a page you already wrote. Circle every went, got, said, nice, good, very. Replace at least 8 with power words. Then write a new paragraph where every verb is a power verb.",
+ checks:["I circled the lazy words","I swapped at least 8","My new paragraph uses power verbs only"]},
+
+{land:1,title:"Bridges",skill:"Transition words and phrases",std:"W.4.3c",
+ say:"In Apprentice Village you used time words. Now let's build longer bridges between moments!",
+ lesson:["Transitions are bridges that carry readers from one moment to the next.",
+  "Go beyond “then, then, then.” Try: <i>meanwhile, later that night, the next morning, without warning, at that exact moment, a few minutes later, by the time</i>.",
+  "Use a <b>variety</b>: if every sentence starts with “Then,” readers get bored."],
+ ex:"Ruby hid behind the scoreboard. <mark>Meanwhile</mark>, the mascot thief tiptoed toward the locker room. <mark>At that exact moment</mark>, the lights went out. <mark>A few seconds later</mark>, someone screamed, and <mark>by the time</mark> the lights blinked back on, the trophy was gone.",
+ exNote:"Four different bridges, zero “thens.”",
+ game:{type:"pick",rounds:[
+  {q:"Pick the best bridge: The knight slept. ___, the dragon was sneaking into the village.",opts:["Then","Meanwhile","First"],a:1,why:"Meanwhile shows two things happening at the same time in different places."},
+  {q:"Pick the best bridge: The team lost on Saturday. ___, they practiced twice as hard.",opts:["The next week","Suddenly","Meanwhile"],a:0,why:"The next week shows time passing after the loss."},
+  {q:"Pick the best bridge: Everything was quiet. ___, the wall exploded.",opts:["Finally","Without warning","Later that year"],a:1,why:"Without warning shows something sudden and surprising."}]},
+ prompts:["Write a story that happens in one hour. Use 5 different time bridges.","Write two scenes happening at the same time, joined by “Meanwhile.”","Write a story that jumps from morning to night using bridges."],
+ task:"Write a story with at least 6 different transitions, and no more than 1 “then.” Underline every transition when you're done.",
+ checks:["6 different transitions","1 “then” or fewer","I underlined them all"]},
+
+{land:1,title:"Climb the Story Mountain",skill:"Plot: rising action and climax",std:"W.4.3a",
+ say:"Stories aren't flat. They climb a mountain, and the top is the most exciting part!",
+ lesson:["The <b>Story Mountain</b>:",
+  "<b>Base:</b> meet the hero and the world. <b>Problem:</b> something goes wrong.",
+  "<b>Climbing (rising action):</b> things get harder and harder. Each try fails or makes it worse.",
+  "<b>Peak (climax):</b> the biggest, most exciting moment. The hero faces the problem head-on.",
+  "<b>Sliding down:</b> things calm down. <b>Bottom:</b> the problem is solved."],
+ ex:"Base: <mark>Kai is the slowest runner at Dragon Academy.</mark> Problem: <mark>He must win the Sky Race or be sent home.</mark> Climbing: <mark>His dragon gets a cold. A rival cheats. A storm rolls in.</mark> Peak: <mark>In the storm, Kai flies straight through the lightning cloud nobody else dares to enter.</mark> Bottom: <mark>He wins, and learns being brave beats being fast.</mark>",
+ exNote:"Notice how the climbing part makes things worse and worse.",
+ game:{type:"order",q:"Build the Story Mountain from bottom to top to bottom again.",items:[
+  "Base: Nora is a young knight who guards the castle library.",
+  "Problem: The most important spell book is stolen.",
+  "Climbing: She follows tracks into the forest, but gets lost.",
+  "Climbing: A troll blocks the bridge and demands a riddle.",
+  "Peak: Nora faces the thief, a shadow wizard, in his tower.",
+  "Sliding down: The book is back, and the wizard is trapped in his own spell.",
+  "Bottom: Nora is made Chief Librarian Knight."]},
+ prompts:["Plan a mountain for a hero trying to win the big game.","Plan a mountain where an animal must find its way home.","Plan a mountain for a quest through a dangerous storm island."],
+ task:"Draw a Story Mountain on paper. Fill in every part, with at least 3 “climbing” problems that get harder. Then write the story.",
+ checks:["I drew the whole mountain","3 climbing problems that get harder","My peak is the most exciting part","I wrote the story"]},
+
+{land:1,title:"An Ending That Fits",skill:"Endings that come from the story",std:"W.4.3e",
+ say:"Up here, endings must make SENSE. No magic rescue out of nowhere!",
+ lesson:["A strong ending <b>follows from what happened</b>. The hero solves the problem using something we saw earlier.",
+  "<b>Trap:</b> a wizard appears from nowhere and fixes everything. That's called a cheat ending.",
+  "<b>Better:</b> the hero uses a skill, an object, or a friend we met before.",
+  "Bonus: show how the hero changed since the beginning."],
+ ex:"Remember the bag of pepper the cook gave Tom in chapter one? <mark>At the very end, Tom tossed it at the giant's nose.</mark> The giant sneezed so hard he blew himself back up the beanstalk.",
+ exNote:"The pepper showed up early, so the ending feels fair and clever.",
+ game:{type:"pick",rounds:[
+  {q:"Earlier, the hero learned to whistle like a hawk. Which ending fits best?",opts:["A dragon flies by and saves her.","She whistles like a hawk, and the mice guarding the gate scatter in fear.","She wakes up and it was a dream."],a:1,why:"It uses the whistling skill we already saw."},
+  {q:"The goalie spent the story practicing diving saves. Which ending fits?",opts:["It starts raining and the game is canceled.","She dives left and catches the final penalty kick.","A different player wins the game."],a:1,why:"Her practice pays off. That's satisfying!"}]},
+ prompts:["Write a story where a tiny object from the beginning saves the day at the end.","Write an ending where the hero's weakness becomes their strength.","Fix this cheat ending: “Then a wizard appeared and fixed everything.”"],
+ task:"Plant and Pay Off: Write a story where you plant something in the beginning (a skill, object, or friend) and it solves the problem at the end. Tell a family member what you planted and see if they noticed!",
+ checks:["I planted something early","It solves the problem at the end","No cheat ending","The hero changed a little"]},
+
+{land:1,boss:true,title:"Boss: The Mountain Trial",skill:"A full Adventurer story",std:"W.4.3 (all)",
+ say:"You've climbed Dragon Mountains. Now face the Mountain Trial!",
+ lesson:["Write a complete story (about 2–3 pages) using every Adventurer skill.","Plan with a Story Mountain first. Then write, then use the checklist to revise."],
+ ex:"Boss prompt: <mark>A storm traps your hero on a mountain with the one creature they fear most, and they have to work together to get down.</mark>",
+ exNote:"Or spin the Story Spinner for your own.",
+ game:null,
+ prompts:["A storm traps your hero on a mountain with the creature they fear most.","Your team's mascot comes to life the night before the championship.","Spin the Story Spinner and write about whatever comes up."],
+ task:"Write your Mountain Trial story! Plan with a Story Mountain, write it, then go through the checklist.",
+ checks:["A hook first sentence","Sensory details (3 or more senses)","Power verbs, very few lazy words","A variety of transitions","A Story Mountain with a clear peak","An ending that fits and uses something planted","I read it out loud to someone"]},
+
+/* ===== LAND 3: 5th grade ===== */
+{land:2,title:"Speed Control",skill:"Pacing",std:"W.5.3b",
+ say:"Welcome to Storm Castle, Master-in-training! Here you control TIME itself.",
+ lesson:["<b>Pacing</b> is how fast or slow your story moves.",
+  "<b>Slow down</b> the big moments: use lots of detail, short punchy sentences, thoughts, and senses. Make one second last a whole paragraph.",
+  "<b>Speed up</b> the boring parts: “Three days of walking later, they reached the gate.”",
+  "Your Mac Beth story raced past the big fight in one sentence. A master would slow that moment way down."],
+ ex:"Fast: <mark>The walk to the arena took all morning.</mark><br>Slow: The gate creaked open. <mark>Sand. Sun. Ten thousand faces.</mark> My heartbeat thudded in my ears. Across the arena, the dragon lowered its head, and I saw my own tiny reflection in its golden eye. <mark>I gripped my sword. Breathe, I told myself. Just breathe.</mark>",
+ exNote:"The boring walk takes one sentence. The big moment takes a whole paragraph.",
+ game:{type:"sort",q:"Should you SLOW this moment down or SPEED through it?",bins:["Slow it down","Speed it up"],items:[
+  ["The final penalty kick of the championship",0],["Brushing teeth before the trip",1],["Opening the treasure chest",0],
+  ["Five days of sailing with nothing happening",1],["Meeting the dragon face to face",0],["Eating a normal breakfast",1],
+  ["The moment the ghost appears",0],["Riding the bus to school",1]]},
+ prompts:["Slow down 10 seconds: the last shot of a basketball game.","Write a scene that speeds through a week, then slows down for one moment.","Slow down the moment a hero opens a mysterious door."],
+ task:"Find the biggest moment in a story you already wrote. Rewrite JUST that moment so it lasts at least one full paragraph. Use short sentences, senses, and thoughts.",
+ checks:["I picked the biggest moment","It's now a full paragraph or longer","I used short sentences for tension","I sped through a boring part too"]},
+
+{land:2,title:"Who's Telling?",skill:"Point of view and narrator",std:"W.5.3a",
+ say:"Who's telling your story? Changing the narrator changes EVERYTHING.",
+ lesson:["<b>First person:</b> the narrator is IN the story and uses <i>I, me, we</i>. “I raised my shield.”",
+  "<b>Third person:</b> the narrator is outside, using <i>he, she, they</i>. “She raised her shield.”",
+  "First person feels close and personal. Third person can show many characters.",
+  "Try retelling a story from a new character's view. The villain! The dragon! The sidekick's pet!"],
+ ex:"Knight's view: <mark>I</mark> charged up the hill to slay the beast.<br>Dragon's view: <mark>I</mark> was having a perfectly nice nap when a tiny metal person started yelling at <mark>me</mark>. Rude.",
+ exNote:"Same moment, totally different story.",
+ game:{type:"sort",q:"First person or third person?",bins:["First person","Third person"],items:[
+  ["I couldn't believe the wolf could talk.",0],["She grabbed the map and ran.",1],["We sprinted to the end zone.",0],
+  ["The dragon stretched his wings and yawned.",1],["My heart pounded as the gate opened.",0],["They hid behind the castle wall.",1]]},
+ prompts:["Retell a fairy tale from the villain's point of view.","Write a soccer game from the ball's point of view.","Tell a castle adventure from the point of view of the castle cat."],
+ task:"Write the same scene twice: once in first person as the hero, once in first person as the villain or a creature. What changed? Write 2 sentences about it.",
+ checks:["Scene #1 from the hero","Scene #2 from another character","Each one stays in its point of view","I wrote what changed"]},
+
+{land:2,title:"Dialogue with Purpose",skill:"Dialogue that does a job",std:"W.5.3b",
+ say:"Masters make every line of dialogue do a job.",
+ lesson:["Good dialogue does at least one job: <b>shows who a character is</b>, <b>moves the story forward</b>, or <b>builds tension</b>.",
+  "Cut boring talk: “Hi.” “Hi.” “How are you?” “Good.” Zzzz.",
+  "Use <b>action beats</b> instead of always writing “said”: <i>“Fine.” Leo slammed the door.</i>",
+  "Each character should sound different. A grumpy wizard and an excited squire don't talk the same way."],
+ ex:"<mark>“You're late,”</mark> the old wizard muttered, not looking up from his potion.<br><mark>“The bridge troll wanted a riddle! And then a second riddle! And then—”</mark><br><mark>“Sit.”</mark> The wizard pushed a smoking cup toward him. <mark>“Drink. We have one hour before the moon rises.”</mark>",
+ exNote:"We learn the wizard is grumpy, the squire is chatty, AND there's a deadline.",
+ game:{type:"pick",rounds:[
+  {q:"Which dialogue does the most work?",opts:["“Hi,” said Max. “Hi,” said Zoe. “What's up?” “Not much.”","“Don't touch that,” Zoe whispered, grabbing Max's wrist. “The last kid who touched that egg disappeared.”","“Look at that egg,” said Max."],a:1,why:"It builds tension, shows Zoe knows something, and moves the story forward."},
+  {q:"Which line uses an ACTION BEAT instead of “said”?",opts:["“I'm not scared,” said Ben.","“I'm not scared.” Ben's voice cracked on the last word.","Ben said he wasn't scared."],a:1,why:"The voice crack shows us he IS scared, which is even better."}]},
+ prompts:["Write a conversation where one character is lying, and readers can tell.","Write a pep talk from a coach that's really a secret warning.","Write two characters who want opposite things, using only dialogue and action beats."],
+ task:"Write a scene that is mostly dialogue between two very different characters. No “Hi, how are you” lines! Use at least 3 action beats. Ask someone: could they tell the two characters apart?",
+ checks:["Every line does a job","3 or more action beats","The characters sound different","Someone could tell them apart"]},
+
+{land:2,title:"Twisty Transitions",skill:"Transition clauses and time jumps",std:"W.5.3c",
+ say:"Master-level bridges can jump across time and space!",
+ lesson:["A <b>transition clause</b> is a longer bridge with its own action: <i>While the knight slept, the dragon crept closer.</i>",
+  "Time jumps: <i>Three years later… Long before any of this began…</i>",
+  "Place jumps: <i>Back at the castle… Far below the ocean…</i>",
+  "A <b>flashback</b> jumps into the past and back again. Use a clear bridge in AND out."],
+ ex:"<mark>As the final whistle blew</mark>, Maya fell to her knees in the grass. <mark>Six months earlier, she couldn't even kick the ball straight.</mark> She remembered the cold mornings practicing alone in the park. <mark>Now, with the trophy shining in front of her</mark>, it all felt worth it.",
+ exNote:"A flashback in, and a clear bridge back out.",
+ game:{type:"pick",rounds:[
+  {q:"Which is a transition CLAUSE (a longer bridge with its own action)?",opts:["Then","While the crowd cheered, the thief slipped out the back door.","Next"],a:1,why:"“While the crowd cheered” is its own little action that connects two events."},
+  {q:"Which jumps OUT of a flashback back to the present?",opts:["Back then, he was tiny.","Now, standing at the dragon's gate, he wasn't tiny anymore.","Long ago, there lived a boy."],a:1,why:"“Now” brings us back to the present moment."}]},
+ prompts:["Write a story that starts at the end, then jumps back to explain how it happened.","Write two heroes in two places, switching with “Meanwhile, back at…”","Write a sports story with a flashback to the first practice."],
+ task:"Write a story with ONE flashback. Use a transition clause to jump into the past and another to jump back out. Use at least 3 transition clauses in total.",
+ checks:["My story has one flashback","Clear bridge into the past","Clear bridge back out","3 or more transition clauses"]},
+
+{land:2,title:"Revision Workshop",skill:"Making a draft better (A.R.M.S.)",std:"W.5.5",
+ say:"Real authors never stop at the first draft. Time to use your A.R.M.S.!",
+ lesson:["Revising means making the STORY better (editing fixes spelling; that's next).",
+  "<b>A</b>dd: details, senses, dialogue, a missing step.",
+  "<b>R</b>emove: boring parts and repeated words.",
+  "<b>M</b>ove: put things in a better order.",
+  "<b>S</b>ubstitute: swap weak words for power words.",
+  "Big challenge: revise your Mac Beth story with everything you've learned!"],
+ ex:"Draft: <i>Arthur killed William.</i><br>Revised: Arthur's hand <mark>shook</mark> as he <mark>drew the silver sword</mark>. <mark>“You should have stayed outside, brother.”</mark> William <mark>stepped back, his boots slipping on the wet church steps</mark>…",
+ exNote:"Added detail and dialogue, substituted power words, slowed down the big moment.",
+ game:{type:"sort",q:"Which A.R.M.S. move is this?",bins:["Add","Remove","Move","Substitute"],items:[
+  ["Change “went” to “stormed.”",3],["Cut a paragraph about lunch that doesn't matter.",1],["Put the dragon's first appearance earlier for a better hook.",2],
+  ["Write what the cave smelled like.",0],["Delete the third “suddenly” on the page.",1],["Swap “nice” for “generous.”",3],["Add a line of dialogue to the big moment.",0],["Swap the order of two scenes so the clue comes first.",2]]},
+ prompts:["Revise your Mac Beth story: slow down the fight, and add dialogue at the wedding.","Revise your Boss story from Apprentice Village using A.R.M.S.","Revise any old story and make it at least 50% longer with great details."],
+ task:"Choose an old story (Mac Beth is perfect!). Do at least 2 of EACH A.R.M.S. move. Use a different color pencil so you can see your revisions.",
+ checks:["2 or more Adds","2 or more Removes","2 or more Moves","2 or more Substitutes","Read both versions. Which is better?"]},
+
+{land:2,title:"Polish & Publish",skill:"Editing (C.U.P.S.) and sharing",std:"W.5.5, W.5.6",
+ say:"Last training mission! Polish your story until it shines, then share it with the world.",
+ lesson:["Editing uses <b>C.U.P.S.</b>:",
+  "<b>C</b>apitals: start of sentences, names, places.",
+  "<b>U</b>sage: words used right (their/there/they're, eternal vs. internal).",
+  "<b>P</b>unctuation: periods, commas, quotation marks, and spaces after periods!",
+  "<b>S</b>pelling: circle words you're unsure of and check them.",
+  "Then <b>publish</b>: type it up, add a cover and pictures, and share it (StoryJumper is free for this)."],
+ ex:"Before: <i>william cried for mac beth.and gave william internal life</i><br>After: <mark>W</mark>illiam cried for <mark>M</mark>ac <mark>B</mark>eth<mark>. A</mark>nd Mac Beth gave William <mark>eternal</mark> life.",
+ exNote:"Capitals, a space after the period, and the right word: eternal means forever.",
+ game:{type:"pick",rounds:[
+  {q:"Which sentence has NO mistakes?",opts:["the dragon flew over london.","The dragon flew over London.","The dragon flew over london"],a:1,why:"Capital T, capital L for a place name, and a period."},
+  {q:"Which word means “lasting forever”?",opts:["internal","eternal","eternel"],a:1,why:"Eternal = forever. Internal = inside something."},
+  {q:"Which uses quotation marks correctly?",opts:["“Help!” cried the squire.","“Help! cried the squire.”","Help!” cried the squire."],a:0,why:"Only the spoken word goes inside, with the ! inside too."}]},
+ prompts:["Publish your favorite story as a picture book.","Make a cover and back-cover blurb for your best story.","Read your story aloud like an audiobook narrator."],
+ task:"Pick your BEST story. Edit it with C.U.P.S. (one letter at a time, reading it 4 times). Then publish it: type it, add a title page with “by Asher Scardina,” and draw or design a cover.",
+ checks:["C: capitals checked","U: word usage checked","P: punctuation checked","S: spelling checked","Published with a cover"]},
+
+{land:2,boss:true,title:"Final Boss: The Castle Gate",skill:"Master Storyteller story",std:"W.5.3 (all)",
+ say:"This is it. The Castle Gate. Show everything you've learned, and earn the title of Master Storyteller!",
+ lesson:["Write, revise, edit and publish your best story yet (3+ pages).","Take your time: this can be a whole week of writing. Plan → draft → revise (A.R.M.S.) → edit (C.U.P.S.) → publish."],
+ ex:"Final prompt: <mark>Return to Mac Beth. Write the story of one of William's five sons, who discovers the family secret: a ghost, a mysterious guardian, and a promise of eternal life.</mark>",
+ exNote:"Or pick any idea you love. It's your masterpiece.",
+ game:null,
+ prompts:["Write the story of one of William's five sons and the family's ghostly secret.","Write the story you've always wanted to read but no one has written yet.","Spin the Story Spinner three times and combine all three into one epic."],
+ task:"Your masterpiece! Plan it, draft it, revise it, edit it, publish it. Then hold a reading for your family.",
+ checks:["A hook that grabs","A clear point of view","Pacing: big moments slowed down","Dialogue with purpose and action beats","Transition clauses or a flashback","An ending that fits","Revised with A.R.M.S.","Edited with C.U.P.S.","Published and read aloud to family"]}
+];
+M.forEach((m,i)=>m.i=i);
+
+/* ---------- SPINNER DATA ---------- */
+const G={
+ Fantasy:{who:["a knight who is afraid of the dark","a baby dragon who can't breathe fire yet","a wizard's apprentice who keeps sneezing out spells","a princess who secretly wants to be a blacksmith","a griffin with a broken wing","a troll who runs a bakery","an elf archer who always misses","a talking sword","a shy giant","a squire who hates horses","a goblin who wants to be a hero","a phoenix that forgot how to rise"],
+  where:["a floating castle in the clouds","a dragon's treasure cave","an enchanted forest where the trees whisper","a wizard school at the top of a mountain","an underground goblin city","a frozen kingdom where it's always winter","the king's royal stables","a bridge guarded by a riddling troll","a market where you pay with memories","a tower with 1,000 stairs","a lake with a secret door at the bottom","a volcano where dragons go to sleep"],
+  what:["must find a stolen crown before sunrise","accidentally turns the king into a frog","has to win a tournament to save their village","discovers a dragon egg that's about to hatch","gets trapped in a spell that repeats the same day","must deliver a message across enemy land","finds out their best friend is a shapeshifter","has to tame a wild dragon in three days","loses their magic right before the big battle","must break a curse on the whole castle"]},
+ Adventure:{who:["a young explorer with a broken compass","a pirate who gets seasick","a treasure hunter and her loyal dog","a kid who finds a mysterious map in a library book","a ship's cat","a mountain guide who has never been to the top","twin siblings who never agree","a scientist's robot assistant","a jungle tracker","a deep-sea diver","a balloon pilot","a boy who can talk to birds"],
+  where:["a jungle full of ancient ruins","a desert island with one strange tree","a sunken pirate ship","the top of the tallest mountain","a cave behind a waterfall","a hot air balloon over the ocean","a hidden valley with dinosaurs","an abandoned lighthouse","a train racing through the mountains","a frozen arctic research station","a maze of canyons","a secret tunnel under the school"],
+  what:["follows a map to a treasure that isn't gold","gets lost and must find the way home","races a rival to a lost city","has to rescue a friend from a collapsing cave","discovers a creature no one has ever seen","must cross a river full of crocodiles","finds a message in a bottle asking for help","has only one day of food left","finds out the map was a trick","must survive a giant storm"]},
+ "Game Worlds":{who:["a player who gets sucked into their video game","a block-world builder who finds a mysterious portal","a game character who realizes they're in a game","a creeper-like monster who just wants a friend","a gamer whose avatar starts doing things on its own","the last player standing on the island","a village trader with a secret","an NPC who wants to go on a quest","a speedrunner with one life left","a squad of four best friends","a sword-wielding hero made of pixels","a pet wolf in a blocky world"],
+  where:["a world made entirely of blocks","an island where the storm circle keeps shrinking","a level nobody has ever beaten","a glitchy world where the rules keep changing","a giant underground mine full of glowing ore","a floating sky island built by players","a dungeon at the bottom of the map","a server that's about to shut down forever","an arcade machine from 1985","a sky-high building battle","the world's biggest creative build","a respawn point that stopped working"],
+  what:["has to beat the final boss to get back home","discovers a hidden level that shouldn't exist","must protect their base for three nights","finds a glitch that lets them change anything","must team up with their biggest rival to win","loses their whole inventory before the big battle","learns the game is about to be deleted","has to build something amazing in one day","must escape before the storm closes in","finds a message from the game's creator"]},
+ Sports:{who:["the smallest player on the team","a goalie who's afraid of the ball","a horse who wants to run in the big race","a new kid who has never played before","a coach who is secretly a wizard","a star player who loses their lucky socks","twins on rival teams","a referee who can see one minute into the future","a dog who plays soccer","a team mascot who comes to life","a skateboarder who can't land the big trick","a pitcher with a magic arm"],
+  where:["the championship game under the lights","a stadium on the moon","a muddy field in a thunderstorm","an ice rink on a frozen lake","a basketball court in the clouds","the Dragon Cup arena","a skate park after dark","a baseball field in a cornfield","the Olympics for animals","a racetrack in the desert","a beach volleyball tournament","the final round of a giant tournament"],
+  what:["has one second left to score","must win to save their field from being sold","gets injured right before the big game","discovers the other team is cheating","must play the championship with a whole new team","has to beat a team of giants","freezes up when the crowd starts cheering","switches bodies with their rival","loses the game but wins something better","has to teach a dragon how to play"]},
+ Animals:{who:["a wolf pup separated from the pack","a raccoon who runs a secret detective agency","a horse that wants to fly","a penguin who hates the cold","a tiny mouse with a big dream","an old owl who forgot how to fly","a shark who's afraid of fish","a lion who lost his roar","a dog who thinks he's a cat","a fox who always tells the truth","a turtle who wants to win a race","a bear cub on its first winter"],
+  where:["a forest during the first snow","a busy city park at night","the bottom of the ocean","a farm where the animals hold secret meetings","a zoo after closing time","the African savanna","a hollow tree that's bigger on the inside","an animal shelter","a coral reef","a mountain where eagles nest","a swamp full of strange sounds","a backyard that feels like a jungle"],
+  what:["must find their way home before winter","has to stop a hungry predator","discovers humans can understand them","makes friends with their natural enemy","must lead the pack for the first time","has to save the forest from a fire","enters a talent show to save their home","finds a lost human baby animal","must solve the mystery of the missing acorns","has one day to prove they're brave"]},
+ Spooky:{who:["a friendly ghost who can't scare anyone","a kid who moves into a haunted house","a vampire who is afraid of the dark","a skeleton who keeps losing his bones","a witch's cat with a secret","a zombie who just wants to be on the soccer team","a ghost knight guarding a treasure","a boy who can see ghosts","a werewolf who only changes into a puppy","a haunted suit of armor","a mummy who wants to see the ocean","a girl who hears whispers in the walls"],
+  where:["an old castle on a foggy hill","a graveyard on Halloween night","a creaky attic full of old trunks","a school after midnight","an abandoned carnival","a church where a ghost haunts the bell tower","a library where books move by themselves","a pumpkin patch at sunset","a spooky shipwreck","a mansion with 100 locked doors","a forest where the fog never lifts","a basement with a door that wasn't there before"],
+  what:["must help a ghost finish its unfinished business","has to survive one night in the haunted house","discovers the ghost is trying to warn them","must break a 100-year-old curse","finds a mirror that shows the future","has to find out who is haunting the school","is trapped in a house that rearranges its rooms","must return a stolen treasure to its ghostly owner","becomes invisible and can't change back","has to convince everyone the monster is friendly"]}
+};
+const TW=["…and they have to work with someone they don't like.","…but they only have one hour.","…and the villain turns out to be family.","…but they must keep it a secret.","…and nobody believes them.","…but their best friend gets captured.","…and it's all happening on their birthday.","…but they lose something important on the way.","…and a talking animal keeps giving bad advice.","…but the map is in a secret code.","…and they discover they have a hidden power.","…but the weather turns wild.","…and they have to tell it as a diary.","…but they can't use their usual strength.","…and there's a surprise twin.","…but the real treasure is something unexpected.","…and the story is told from the villain's view.","…but everything happens backwards.","…and they have to sneak past a sleeping dragon.","…but they must win without fighting."];
+const CARDS=[
+ "A dragon egg appears on your doorstep with a note: “Please take care of her.”","You wake up inside your favorite video game. You have three lives. What's your first move?","A knight is scared of horses, but must ride in the king's race.","Your soccer ball starts talking during the championship. It has opinions.","The castle's dragon goes missing the night before the big festival.","Your pet can talk for one day only. What does it tell you?","A ghost wants to scare people, but everyone thinks he's adorable.","You find a door in your block-built world that wasn't there yesterday.","A wolf pup is the only one who can save the pack from a blizzard.","The school mascot comes to life at midnight and needs your help.","You discover your grandpa was once a dragon rider.","Every time you sneeze, something in the house turns to gold.","A treasure map is hidden inside your lunchbox.","You and your rival must team up to survive the storm island.","A baby griffin follows you home from school.","A troll guards the bridge and asks a riddle no one has ever solved. Until today.","You become the size of an ant for one day. How do you get home?","The king announces a contest: whoever finds the lost crown becomes a knight.","Your dog is secretly a famous detective.","A friendly monster lives under the bleachers at the stadium.","You wake up and everyone in town has switched bodies with their pet.","A wizard accidentally turns your teacher into a frog. Can you fix it?","The animals at the zoo hold a meeting after closing time. You sneak in.","You find a sword stuck in a rock in your backyard.","A storm blows your hot air balloon to an island that isn't on any map.","The last player on the island hears a knock on the door of their fort.","You're the new kid at Dragon Academy, and your dragon is the smallest.","A shark is afraid of the water and must learn to swim.","Your basketball has a magic bounce, but only when you tell the truth.","A haunted suit of armor needs help finding its missing knight.","The tallest tower in the kingdom has a door at the top that's never been opened.","Write about a time you were brave, but make it a fantasy story.","A wizard school accepts one kid each year. This year, it's you.","An old owl teaches a young bird how to fly, but the owl has a secret.","You discover your house is built on top of a sleeping dragon.","A tiny mouse wants to win the Great Forest Race.","The championship is on the moon, and the gravity is weird.","A raccoon detective must solve the case of the missing pies.","You find a glowing ore deep in a mine that makes animals talk.","Your shadow decides to go on its own adventure.","Write a day in the life of a dragon, from the dragon's point of view.","A knight and a dragon become best friends. The kingdom isn't happy.","You can pause time for 10 seconds, but only three times.","A message in a bottle washes up with your name on it.","The goalie who always misses gets one more chance.","You get a pet that wasn't in any book of animals.","A friendly zombie wants to join your soccer team.","Your video game character texts you for help.","The moon goes missing. Only you notice.","A horse who wants to fly finds a pair of mysterious feathers.","Retell “The Three Little Pigs” from the wolf's point of view.","You're invisible for a day. What do you do first?","A castle cook discovers the soup gives people superpowers.","Your new teacher might be a werewolf. Gather the clues.","A sports team made of animals plays a team made of robots.","The town's statue starts moving at night.","You find a portal in the back of your closet to a block-built world.","A pirate who's afraid of water has to find treasure.","The world's last dragon asks you for one favor.","Your grandma's attic has a trunk labeled “DO NOT OPEN.”"];
+
+/* ---------- STATE ---------- */
+const KEY="asherQuest.v1";
+let S={done:{},games:{},favs:[],genre:"Fantasy",unlockAll:false};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+try{const h=window.claude?.hot?.data;if(h&&h.done)S=Object.assign(S,h)}catch(e){}
+try{window.claude?.hot?.snapshot?.(()=>S)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const unlocked=i=>S.unlockAll||i===0||!!S.done[i-1];
+const xp=()=>Object.keys(S.done).reduce((t,k)=>t+(M[k]&&M[k].boss?50:20),0);
+const rank=()=>{const n=Object.keys(S.done).length;return n>=M.length?"Master Storyteller":S.done[14]?"Master in training":S.done[7]?"Adventurer":n?"Apprentice":"New recruit"};
+function toast(t,img){const e=$("#toast");e.innerHTML=(img?`<img class="toastimg" src="art/${img}.webp" alt="">`:"")+esc(t);e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2600)}
+
+/* ---------- HEADER + TABS ---------- */
+function stats(){const he=$("#hdrEmber");if(he)he.src=Object.keys(S.done).length>=M.length?"art/ember-crown.webp":"art/ember-wave.webp";$("#stats").innerHTML=`<span class="stat"><b>${xp()}</b>XP</span><span class="stat"><b>${Object.keys(S.done).length}</b>of ${M.length} badges</span><span class="stat">${rank()}</span>`}
+function show(v){document.querySelectorAll(".view").forEach(e=>e.classList.toggle("on",e.id==="v-"+v));document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.v===v));if(location.hash!=="#"+v)history.replaceState(null,"","#"+v)}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>show(t.dataset.v)));
+
+/* ---------- MAP ---------- */
+const POS=(()=>{const p=[];const rows=[[8,850,1],[7,520,-1],[7,190,1]];rows.forEach(([n,y,dir],r)=>{for(let j=0;j<n;j++){const t=j/(n-1);let x=90+t*820;if(dir<0)x=910-t*820;p.push([x,y+Math.sin((j+r)*1.7)*30])}});return p})();
+function mapSVG(){
+ const cur=M.findIndex((m,i)=>!S.done[i]&&unlocked(i));
+ const d="M"+POS.map(p=>p.join(" ")).join(" L");
+ let s=`<image href="art/map-castle.webp" x="0" y="0" width="1000" height="334" preserveAspectRatio="xMidYMid slice"/><image href="art/map-mountains.webp" x="0" y="333" width="1000" height="334" preserveAspectRatio="xMidYMid slice"/><image href="art/map-village.webp" x="0" y="666" width="1000" height="334" preserveAspectRatio="xMidYMid slice"/>
+ <rect x="0" y="331" width="1000" height="5" fill="#0a1640"/><rect x="0" y="664" width="1000" height="5" fill="#0a1640"/>`;
+ const lab=(x,y,t)=>`<text x="${x}" y="${y}" font-family="Lilita One, Arial Black, sans-serif" font-size="34" fill="#fff" stroke="#1b1f3a" stroke-width="8" paint-order="stroke">${t}</text>`;
+ s+=lab(20,706,"Apprentice Village")+lab(175,374,"Dragon Mountains")+lab(20,42,"Storm Castle");
+ s+=`<path d="${d}" fill="none" stroke="#1b1f3a" stroke-width="24" stroke-linejoin="round" stroke-linecap="round" opacity=".55"/><path d="${d}" fill="none" stroke="#fff3c4" stroke-width="15" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#c98d2a" stroke-width="5" stroke-dasharray="2 16" stroke-linecap="round"/>`;
+ M.forEach((m,i)=>{const [x,y]=POS[i];const ok=unlocked(i),dn=!!S.done[i],r=m.boss?54:42;
+  const img=dn?"stone-done":!ok?"stone-locked":m.boss?"stone-boss":"stone-open";
+  s+=`<g class="stone" tabindex="${ok?0:-1}" role="button" aria-label="Mission ${i+1}: ${esc(m.title)}${dn?" (done)":ok?"":" (locked)"}" data-i="${i}"><g class="${i===cur?"pulse":""}"><image href="art/${img}.webp" x="${x-r}" y="${y-r}" width="${2*r}" height="${2*r}"/>`+
+   (ok&&!dn&&!m.boss?`<text x="${x}" y="${y+12}" text-anchor="middle" font-size="34" fill="#1b1f3a">${i+1}</text>`:"")+`</g></g>`});
+ if(cur>=0){const [x,y]=POS[cur];const ex=x>800?x-150:x+30;s+=`<image href="art/loading.webp" x="${ex}" y="${y-140}" width="120" height="120"/>`}
+ const svg=$("#map");svg.innerHTML=s;
+ svg.querySelectorAll(".stone").forEach(g=>{const i=+g.dataset.i;const go=()=>{if(unlocked(i))openM(i);else toast("Finish the mission before this one to unlock it!","ember-sleeping")};g.addEventListener("click",go);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}})});
+}
+function lands(){
+ $("#lands").innerHTML=LANDS.map(L=>{const ms=M.filter(m=>m.land===L.id);const d=ms.filter(m=>S.done[m.i]).length;
+  return `<div class="land"><img class="lband" src="art/${["land-apprentice","land-adventurer","land-master"][L.id]}.webp" alt=""><h3>${L.name}<small>${L.grade}</small></h3><div class="bar" aria-label="${d} of ${ms.length} done"><i style="width:${d/ms.length*100}%;background:${L.color}"></i></div><ul class="mlist">${ms.map(m=>`<li><button class="mbtn ${S.done[m.i]?"done":""} ${m.boss?"boss":""}" data-i="${m.i}" ${unlocked(m.i)?"":"disabled"}><span class="n">${S.done[m.i]?"★":m.boss?"B":m.i+1}</span><span class="t">${esc(m.title)}<small>${esc(m.skill)}</small></span></button></li>`).join("")}</ul></div>`}).join("");
+ document.querySelectorAll(".mbtn").forEach(b=>b.addEventListener("click",()=>openM(+b.dataset.i)));
+}
+
+/* ---------- MISSION PANEL ---------- */
+let cm=null,step=0,game=null;
+const STEPS=["Learn","Example","Play","Get a prompt","Write"];
+const SICON={"Learn":"step-learn","Example":"step-example","Play":"step-play","Get a prompt":"step-prompt","Write":"step-write"};
+const HERO=["mission-01-idea-hunting","mission-02-hero-builder","mission-03-where-when","mission-04-story-path","mission-05-talking-characters","mission-06-show-dont-tell","mission-07-the-ending","boss-01-dragons-egg","mission-09-hook","mission-10-five-senses","mission-11-power-words","mission-12-bridges","mission-13-story-mountain","mission-14-ending-that-fits","boss-02-mountain-trial","mission-16-speed-control","mission-17-whos-telling","mission-18-dialogue-purpose","mission-19-twisty-transitions","mission-20-revision-workshop","mission-21-polish-publish","boss-03-castle-gate"];
+const ember=(pose,alt)=>`<img src="art/ember-${pose}.webp" alt="${alt||"Ember"}">`;
+function openM(i){cm=M[i];step=0;game=null;$("#panel").classList.add("on");document.body.style.overflow="hidden";renderM();setTimeout(()=>$("#sheet .x")?.focus(),30)}
+function closeM(){$("#panel").classList.remove("on");document.body.style.overflow="";cm=null;refresh()}
+function stepList(){return cm.game?STEPS:STEPS.filter(s=>s!=="Play")}
+function renderM(){
+ const st=stepList(),name=st[step];
+ const L=LANDS[cm.land];
+ let h=`<div class="hd ${cm.boss?"boss":""}"><div><small>${L.name} · Mission ${cm.i+1} · ${esc(cm.std)}</small><h2 id="mtitle" style="margin:2px 0 0">${esc(cm.title)}</h2><small>${esc(cm.skill)}</small></div><button class="x" aria-label="Close mission">✕</button></div>
+ <img class="mhero" src="art/${HERO[cm.i]}.webp" alt=""><div class="steps">${st.map((s,k)=>`<button data-k="${k}" ${k===step?'aria-current="true"':""} class="${k<step?"ok":""}"><img src="art/${SICON[s]}.webp" alt="">${k+1}. ${s}</button>`).join("")}</div><div class="body">`;
+ if(name==="Learn")h+=`<div class="say">${ember(cm.boss?"knight":"teaching")}<div class="bubble">${esc(cm.say)}</div></div><ul class="lesson">${cm.lesson.map(l=>`<li>${l}</li>`).join("")}</ul>`;
+ if(name==="Example")h+=`<div class="say">${ember("pointing")}<div class="bubble">Look at what this writer did!</div></div><h3>See it in action</h3><div class="ex">${cm.ex}</div><p class="tip" style="margin-top:10px">${esc(cm.exNote)}</p><p class="tip">Parent tip: read it aloud together, then ask, “What did the writer do that we could steal?”</p>`;
+ if(name==="Play")h+=`<div class="say">${ember("thinking")}<div class="bubble">Quick game! Let's see if you've got it.</div></div><div class="game" id="game"></div>`;
+ if(name==="Get a prompt")h+=`<div class="say">${ember("spinner")}<div class="bubble">Pick a prompt, or spin for a surprise!</div></div><h3>Choose your prompt</h3><p>Pick one of these, or use any idea you like. Tap to choose.</p>${cm.prompts.map((p,k)=>`<label class="pcard"><input type="radio" name="pp" value="${k}" ${k===0?"checked":""}> <span>${esc(p)}</span></label>`).join("")}<div class="row" style="margin-top:10px"><button class="btn ghost" id="randP">Give me a surprise prompt</button></div><div class="card" id="randOut" style="display:none"></div>`;
+ if(name==="Write"){h+=`<div class="say">${ember("writing")}<div class="bubble">Your turn to write. I believe in you!</div></div><h3>Your mission</h3><div class="task">${esc(cm.task)}</div><p class="tip" style="margin-top:10px">Write on paper or in your Notes app. Writing it by hand counts!</p>
+  <div class="timer"><img src="art/write-hourglass.webp" alt=""><span class="clock" id="clock">15:00</span><button class="btn ghost" id="tgo">Start writing sprint</button><button class="btn ghost" id="treset">Reset</button></div>
+  <div class="pcrow"><img src="art/write-checklist.webp" alt="" style="width:64px;height:64px"><h3 style="margin:0">Check your work</h3></div><ul class="checks">${cm.checks.map((c,k)=>`<li><label><input type="checkbox" data-c="${k}"> <span>${esc(c)}</span></label></li>`).join("")}</ul>
+  <button class="btn red" id="finish" disabled>${S.done[cm.i]?"Mission already complete ★":"Complete mission!"}</button>`}
+ h+=`</div><div class="nav2"><button class="btn ghost" id="prev" ${step===0?"disabled":""}>Back</button>${step<st.length-1?`<button class="btn" id="next">Next: ${st[step+1]}</button>`:""}</div>`;
+ $("#sheet").innerHTML=h;
+ $("#sheet .x").onclick=closeM;
+ document.querySelectorAll(".steps button").forEach(b=>b.onclick=()=>{step=+b.dataset.k;renderM()});
+ $("#prev").onclick=()=>{if(step>0){step--;renderM()}};
+ const nx=$("#next");if(nx)nx.onclick=()=>{step++;renderM();$("#panel").scrollTop=0};
+ if(name==="Play")runGame();
+ if(name==="Get a prompt")$("#randP").onclick=()=>{const g=G[pick(Object.keys(G))];const o=$("#randOut");o.style.display="block";o.textContent=`Write about ${pick(g.who)} in ${pick(g.where)} who ${pick(g.what)}.`};
+ if(name==="Write")wireWrite();
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&cm)closeM()});
+
+function wireWrite(){
+ const boxes=[...document.querySelectorAll(".checks input")],fin=$("#finish");
+ const upd=()=>{fin.disabled=!boxes.every(b=>b.checked)};
+ boxes.forEach(b=>b.addEventListener("change",upd));
+ fin.onclick=()=>{const first=!S.done[cm.i],i=cm.i;S.done[i]=Date.now();save();closeM();celebrate(i,first)};
+ let left=900,tm=null;const clk=$("#clock");
+ const draw=()=>{clk.textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`};
+ $("#tgo").onclick=()=>{if(tm){clearInterval(tm);tm=null;$("#tgo").textContent="Keep going";return}$("#tgo").textContent="Pause";tm=setInterval(()=>{left--;draw();if(left<=0){clearInterval(tm);tm=null;toast("Time! Finish your sentence, then check your work.")}if(!document.body.contains(clk))clearInterval(tm)},1000)};
+ $("#treset").onclick=()=>{clearInterval(tm);tm=null;left=900;draw();$("#tgo").textContent="Start writing sprint"};
+}
+
+/* ---------- GAMES ---------- */
+function runGame(){const g=cm.game;if(g.type==="sort")sortGame(g);if(g.type==="order")orderGame(g);if(g.type==="pick")pickGame(g)}
+function winGame(){S.games[cm.i]=1;save()}
+function sortGame(g){
+ const items=shuffle(g.items);let k=0,score=0,tries=0;const el=$("#game");
+ const draw=()=>{if(k>=items.length){el.innerHTML=`<img class="gimg" src="art/game-complete.webp" alt="" style="border-radius:16px"><h3>You sorted them all!</h3><p>${score} of ${items.length} right on the first try.</p><button class="btn ghost" id="again">Play again</button>`;winGame();$("#again").onclick=()=>sortGame(g);return}
+  el.innerHTML=`<p><b>${esc(g.q)}</b> <span class="tip">(${k+1} of ${items.length})</span></p>${g.bins.length===5?`<img class="gimg" src="art/game-five-bins.webp" alt="" style="max-height:120px">`:`<img class="gimg" src="art/game-sort-bins.webp" alt="" style="max-height:110px">`}<div class="item">${esc(items[k][0])}</div><div class="bins">${g.bins.map((b,j)=>`<button class="btn ghost" data-j="${j}">${esc(b)}</button>`).join("")}</div><div class="fb" aria-live="polite"></div>`;
+  el.querySelectorAll(".bins button").forEach(b=>b.onclick=()=>{const fb=el.querySelector(".fb");if(+b.dataset.j===items[k][1]){if(!tries)score++;fb.className="fb good";fb.innerHTML=`<img class="fbimg" src="art/game-correct.webp" alt="">Yes! That's right.`;tries=0;el.querySelectorAll(".bins button").forEach(x=>x.disabled=true);setTimeout(()=>{k++;draw()},900)}else{tries++;fb.className="fb bad";fb.innerHTML=`<img class="fbimg" src="art/ember-oops.webp" alt="">Not quite. Look again and try another!`}})};
+ draw();
+}
+function orderGame(g){
+ let cur=shuffle(g.items);if(cur.join()===g.items.join())cur=cur.slice().reverse();const el=$("#game");let checked=false;
+ const draw=()=>{el.innerHTML=`<p><b>${esc(g.q)}</b></p><ol class="olist">${cur.map((t,j)=>`<li class="${checked?(t===g.items[j]?"right":"wrong"):""}"><span>${esc(t)}</span><button data-u="${j}" aria-label="Move up">▲</button><button data-d="${j}" aria-label="Move down">▼</button></li>`).join("")}</ol><button class="btn" id="chk">Check my order</button><div class="fb" aria-live="polite"></div>`;
+  el.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{const j=+b.dataset.u;if(j>0){[cur[j-1],cur[j]]=[cur[j],cur[j-1]];checked=false;draw()}});
+  el.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const j=+b.dataset.d;if(j<cur.length-1){[cur[j+1],cur[j]]=[cur[j],cur[j+1]];checked=false;draw()}});
+  $("#chk").onclick=()=>{checked=true;const ok=cur.every((t,j)=>t===g.items[j]);draw();const fb=el.querySelector(".fb");if(ok){fb.className="fb good";fb.innerHTML=`<img class="fbimg" src="art/game-correct.webp" alt="">Perfect path! Every step leads to the next.`;winGame()}else{fb.className="fb bad";fb.innerHTML=`<img class="fbimg" src="art/ember-oops.webp" alt="">The red ones are in the wrong spot. Keep moving them!`}}};
+ draw();
+}
+function pickGame(g){
+ let k=0,score=0;const el=$("#game");
+ const draw=()=>{if(k>=g.rounds.length){el.innerHTML=`<img class="gimg" src="art/game-complete.webp" alt="" style="border-radius:16px"><h3>Round complete!</h3><p>${score} of ${g.rounds.length} right on the first try.</p><button class="btn ghost" id="again">Play again</button>`;winGame();$("#again").onclick=()=>pickGame(g);return}
+  const R=g.rounds[k];let first=true;
+  el.innerHTML=`<p><b>${esc(R.q)}</b> <span class="tip">(${k+1} of ${g.rounds.length})</span></p><div class="opts">${R.opts.map((o,j)=>`<button class="opt" data-j="${j}">${esc(o)}</button>`).join("")}</div><div class="fb" aria-live="polite"></div>`;
+  el.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const fb=el.querySelector(".fb");if(+b.dataset.j===R.a){if(first)score++;b.classList.add("right");fb.className="fb good";fb.innerHTML=`<img class="fbimg" src="art/game-correct.webp" alt="">Yes! ${esc(R.why)}`;el.querySelectorAll(".opt").forEach(x=>x.disabled=true);const n=document.createElement("button");n.className="btn";n.textContent=k<g.rounds.length-1?"Next question":"Finish";n.onclick=()=>{k++;draw()};el.appendChild(n)}else{first=false;b.classList.add("wrong");fb.className="fb bad";fb.innerHTML=`<img class="fbimg" src="art/game-tryagain.webp" alt="">Not this one. Try again!`}})};
+ draw();
+}
+
+/* ---------- SPINNER ---------- */
+const RE=[["who","Who"],["where","Where"],["what","What happens"],["tw","Twist"]];const RIMG={who:"reel-who",where:"reel-where",what:"reel-what",tw:"reel-twist"};
+let cur={};
+const pool=(key)=>{if(key==="tw")return TW;if(S.genre==="Scrambler")return Object.values(G).flatMap(g=>g[key]);return G[S.genre][key]};
+function genres(){const all=[...Object.keys(G),"Scrambler"];$("#genres").innerHTML=all.map(g=>`<button class="chip" aria-pressed="${S.genre===g}" data-g="${g}"><img src="art/genre-${g.toLowerCase().replace(" ","-")}.webp" alt="">${g==="Scrambler"?"Scrambler (mix it all!)":g}</button>`).join("");
+ document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{S.genre=c.dataset.g;save();genres();spinAll()})}
+function reels(){$("#reels").innerHTML=RE.map(([k,l])=>`<div class="reel"><span class="lab"><img src="art/${RIMG[k]}.webp" alt="">${l}</span><span class="val" id="r-${k}">…</span><button class="btn ghost" data-k="${k}">Spin</button></div>`).join("");
+ document.querySelectorAll(".reel button").forEach(b=>b.onclick=()=>spin(b.dataset.k))}
+const still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function spin(k,done){const p=pool(k),el=$("#r-"+k);let n=still?0:12;const fin=()=>{cur[k]=pick(p);el.textContent=cur[k];sentence();done&&done()};if(!n)return fin();const t=setInterval(()=>{el.textContent=pick(p);if(--n<=0){clearInterval(t);fin()}},70)}
+function spinAll(){RE.forEach(([k],j)=>setTimeout(()=>spin(k),j*140))}
+function sentence(){if(!cur.who||!cur.where||!cur.what)return;$("#result").innerHTML=`Write a story about <b>${esc(cur.who)}</b> in <b>${esc(cur.where)}</b> who <b>${esc(cur.what)}</b> <span>${esc(cur.tw||"")}</span>`}
+function favs(){$("#favs").innerHTML=S.favs.length?S.favs.map((f,j)=>`<li>${esc(f)} <button data-j="${j}" aria-label="Remove saved idea">Remove</button></li>`).join(""):`<li class="tip" style="list-style:none;margin-left:-20px">Nothing saved yet. Save your favorite ideas for later!</li>`;
+ document.querySelectorAll("#favs button").forEach(b=>b.onclick=()=>{S.favs.splice(+b.dataset.j,1);save();favs()})}
+$("#spinAll").onclick=spinAll;
+$("#saveSpin").onclick=()=>{const t=$("#result").textContent.trim();if(t&&!S.favs.includes(t)){S.favs.unshift(t);save();favs();toast("Idea saved!")}};
+$("#draw").onclick=()=>{const c=$("#cardOut");c.classList.add("back");setTimeout(()=>{c.textContent=pick(CARDS);c.classList.remove("back")},still?0:450)};
+$("#saveCard").onclick=()=>{const t=$("#cardOut").textContent.trim();if(t&&!S.favs.includes(t)){S.favs.unshift(t);save();favs();toast("Card saved!")}};
+
+/* ---------- BADGES ---------- */
+function badges(){$("#shelf").innerHTML=M.map(m=>{const on=!!S.done[m.i];const f=m.boss?`badge-${String(m.i+1).padStart(2,"0")}-boss`:`badge-${String(m.i+1).padStart(2,"0")}`;
+ return `<div class="badge ${on?"":"off"}"><img src="art/${on?f:"badge-locked"}.webp" alt="${on?"Earned":"Locked"} badge">${esc(m.title)}</div>`}).join("")}
+
+/* ---------- PARENT CORNER ---------- */
+function parents(){
+ $("#pc").innerHTML=`<img class="pcimg" src="art/parent-corner.webp" alt=""><h2>Parent corner</h2>
+ <p>This course takes Asher through the narrative-writing skills taught in 3rd, 4th and 5th grade, in that order. Each land matches one grade's Common Core narrative standard (W.3.3, W.4.3, W.5.3). Each one builds on the last: 3rd grade sets up characters, sequence, dialogue and closure; 4th adds sensory and concrete detail, transitions and endings that follow from events; 5th adds pacing and transition clauses. Missions unlock one at a time, so skills can't be skipped.</p>
+ <h3>How to run a session (about 25–40 minutes)</h3>
+ <ul class="lesson"><li><b>Learn + Example (5–10 min).</b> Read the lesson and example together, out loud. This copies the writer's workshop "mini-lesson + mentor text" routine used in classrooms.</li><li><b>Play (5 min).</b> He does the game on his own. It checks he understood the skill.</li><li><b>Prompt + Write (15–20 min).</b> Let him pick. The 15-minute sprint timer helps him start. Paper or the Notes app both work.</li><li><b>Share (5 min).</b> He reads it to you. This is the most important part.</li></ul>
+ <p><b>Suggested pace:</b> 2–3 sessions a week. Don't rush: repeating a mission with a new prompt is great practice. Bosses can take a whole week.</p>
+ <div class="pcrow"><img src="art/parent-two-stars-wish.webp" alt=""><div><h3>Giving feedback: "two stars and a wish"</h3>
+ <p>After he reads, name two specific things that worked ("I loved how you showed the dragon was angry with the smoke!") and one thing to try next time, tied to the current mission's skill. Save spelling and punctuation for the editing mission, unless he asks.</p></div></div>
+ <h3>Course map</h3><img class="pcimg" src="art/map-full.webp" alt="Painted map of the three lands">
+ <div class="scroll"><table class="stack"><thead><tr><th>#</th><th>Mission</th><th>Skill</th><th>Standard</th></tr></thead><tbody>${M.map(m=>`<tr><td data-l="#" class="nw">${m.boss?"Boss":m.i+1}</td><td data-l="Mission">${esc(m.title)}</td><td data-l="Skill">${esc(m.skill)}</td><td data-l="Standard" class="nw">${esc(m.std)}</td></tr>`).join("")}</tbody></table></div>
+ <h3>Using his Mac Beth story</h3>
+ <p>His story comes back on purpose. It's a hook example in Mission 9, a pacing example in Mission 16, and the revision project in Mission 20. The editing mission gently teaches "eternal" vs. "internal." The final boss invites him to write about one of William's five sons. Seeing his own work improve is the best motivation.</p>
+ <h3>Read alongside</h3><img class="pcimg" src="art/reading-list.webp" alt="">
+ <div class="pcrow"><img src="art/ember-reading.webp" alt=""><div><ul class="lesson">
+ <li><b>Apprentice Village:</b> <i>Ralph Tells a Story</i> (Abby Hanlon), <i>My Father's Dragon</i> (Ruth Stiles Gannett). For fun: the <i>Dragon Masters</i> series (Tracey West).</li>
+ <li><b>Dragon Mountains:</b> <i>Owl Moon</i> (Jane Yolen), <i>Come On, Rain!</i> (Karen Hesse). For fun: <i>How to Train Your Dragon</i> (Cressida Cowell), <i>The Wild Robot</i> (Peter Brown).</li>
+ <li><b>Storm Castle:</b> <i>The True Story of the Three Little Pigs</i> (Jon Scieszka), <i>Roller Coaster</i> (Marla Frazee). For fun: <i>Wings of Fire</i> (Tui T. Sutherland) and a kid-friendly <i>Macbeth</i> retelling.</li></ul></div></div>
+ <h3>Master Storyteller certificate</h3>
+ <p>${S.done[M.length-1]?"Earned! Take a screenshot to print or frame it.":"This unlocks in full color when Asher beats the Final Boss. Here's a sneak peek."}</p>
+ <div class="cert ${S.done[M.length-1]?"":"locked"}"><div><div class="c1">This certifies that</div><div class="c2">Asher Scardina</div><div class="c1">is a</div><div class="c2">Master Storyteller</div><div class="c3">${S.done[M.length-1]?new Date(S.done[M.length-1]).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}):"Date to come"} · Signed, Ember the dragon</div></div></div>
+ <h3>Settings</h3>
+ <div class="row"><label class="pcard" style="margin:0"><input type="checkbox" id="ua" ${S.unlockAll?"checked":""}> <span>Unlock all missions (for skipping ahead or reviewing)</span></label><button class="btn ghost" id="reset">Reset all progress</button></div>
+ <div id="confirm" style="display:none;margin-top:10px" class="pcard"><span>Erase all badges and saved ideas? <button class="btn red" id="yes">Yes, reset</button> <button class="btn ghost" id="no">Cancel</button></span></div>`;
+ $("#ua").onchange=e=>{S.unlockAll=e.target.checked;save();refresh()};
+ $("#reset").onclick=()=>{$("#confirm").style.display="flex"};
+ $("#no").onclick=()=>{$("#confirm").style.display="none"};
+ $("#yes").onclick=()=>{S={done:{},games:{},favs:[],genre:"Fantasy",unlockAll:false};save();refresh();toast("Progress reset")};
+}
+
+function celebrate(i,first){
+ const m=M[i],pad=String(i+1).padStart(2,"0"),bf=m.boss?`badge-${pad}-boss`:`badge-${pad}`;
+ const steps=[];
+ if(!m.boss)steps.push({img:"celebrate-mission",sq:true,t:first?"Mission complete!":"Mission complete again!",p:first?`You earned the “${m.title}” badge and 20 XP.`:"Practice makes masters. Nice work!"});
+ else{steps.push({img:"celebrate-boss",t:"BOSS DEFEATED!",p:`You beat ${m.title.replace(/^(Final )?Boss: /,"")}! +50 XP and a giant badge.`});
+  if(i===7)steps.push({img:"celebrate-level-up-adventurer",t:"Level up: Adventurer!",p:"Dragon Mountains are open. Time to learn 4th-grade skills."});
+  if(i===14)steps.push({img:"celebrate-level-up-master",t:"Level up: Master in training!",p:"The gates of Storm Castle are open. Time for 5th-grade skills."});
+  if(i===M.length-1)steps.push({img:"celebrate-master-storyteller",t:"Asher, Master Storyteller!",p:"You finished the whole quest. Your certificate is waiting in the Parent corner."})}
+ let k=0;const el=$("#cele");
+ const draw=()=>{const c=steps[k];el.innerHTML=`<div class="cbox ${c.sq?"sqmode":""}">${c.sq?`<img class="sq" src="art/${c.img}.webp" alt="">`:`<img class="big" src="art/${c.img}.webp" alt="">`}<div class="in">${k===0?`<img class="bdg" src="art/${bf}.webp" alt="New badge">`:""}<h2>${esc(c.t)}</h2><p>${esc(c.p)}</p><button class="btn" id="cnext">${k<steps.length-1?"Next":"Back to the map"}</button></div></div>`;el.classList.add("on");$("#cnext").focus();$("#cnext").onclick=()=>{if(++k<steps.length)draw();else{el.classList.remove("on");show("map")}}};
+ draw();
+}
+function refresh(){stats();mapSVG();lands();badges();parents();favs()}
+genres();reels();refresh();spinAll();$("#cardOut").textContent=pick(CARDS);
+const h=(location.hash||"").slice(1);show(["map","spin","badges","parents"].includes(h)?h:"map");
+window.addEventListener("hashchange",()=>{const v=location.hash.slice(1);if(["map","spin","badges","parents"].includes(v))show(v)});
+}
+</script>
+</body>
+</html>
